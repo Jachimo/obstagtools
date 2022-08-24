@@ -50,7 +50,9 @@ Content begins here...
 ```
 ### Scripting Examples
 
-Add a tag to all Markdown (`*.md`) files in a specified directory, recursively, that are newer than a specified file:
+Example: add some tags to all Obsidian Markdown (`*.md`) files, 
+starting in a specified directory, recursively,
+that are newer than a specified file:
 
 ```shell
 find ~/MyVault.obs/ \
