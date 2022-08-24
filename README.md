@@ -4,13 +4,15 @@ Quick tools for working with Obsidian-flavor (YAML frontmatter + Markdown conten
 
 ## add_tag.py
 
-Very quick-and-dirty tool for mass-adding tags to a Markdown document,
-suitable for scripting to process many at once.
+Quick-and-dirty tool for mass-adding tags to a Markdown document,
+meant for scripting.
 
-Usage (in place modification): `./add_tag.py targetfile.md -t tag1 tag2`  
-Or to create a copy (safer!): `./add_tag.py targetfile.md copyfile.md -t tag1 tag2`
+Very minimal dependencies (only `sys`, `argparse`, and `logging`).
 
-Prepends one or more specified tag values (`-t`) to the list of tags in the YAML frontmatter.
+**Usage** (in-place modification): `./add_tag.py targetfile.md -t tag1 tag2`  
+Or to create a copy on write (safer!): `./add_tag.py targetfile.md copyfile.md -t tag1 tag2`
+
+**Effect**: Prepends one or more specified tag values (`tag1`, `tag2`) to the list of tags in the YAML frontmatter.
 
 The specified input file must be a "well formed" YAML+Markdown document, consisting of: 
 
