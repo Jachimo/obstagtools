@@ -12,7 +12,8 @@ def main() -> int:  # returns Unix exit value
     parser.add_argument('outpath', nargs='?', default=False,
                         help='Output file to write to (in-place modification if not given)')
     parser.add_argument('--taxonomy', '-T', default=False, help='JSON taxonomy file to use')
-    # TODO: add '--no-clean' to preserve additional fields on doc that are not in taxonomy (remove extras by default)
+    parser.add_argument('--no-clean', help='Keep existing metadata fields not present in taxonomy',
+                        action='store_true')
     parser.add_argument('--debug', help='Enable debug mode (verbose output)', action='store_true')
     args = parser.parse_args()
 
@@ -31,18 +32,20 @@ def main() -> int:  # returns Unix exit value
         args.outpath = args.inpath
 
     obsdoc = obs_document.ObsDocument()  # see obs_document.py
+    obsdoc.filename = args.inpath
 
     logging.debug(f'Reading from {args.inpath}')
     with open(args.inpath, 'r') as infile:
-        obsdoc.filename = args.inpath
         obsdoc.lines = infile.readlines()
         logging.debug(f'Read {len(obsdoc.lines)} lines')
 
+    # Retrieve YAML frontmatter portion of the Obsidian doc
+    frontmatter = obsdoc.get_frontmatter()
+
     with open(args.taxonomy, 'r') as taxfile:
         # Read JSON (or YAML? or simpler?) taxonomy file specifying metadata fields, types, and default values
+        pass
 
-    # Remove/save document content (after frontmatter end) to separate attribute
-    # Read and parse the YAML frontmatter of the Obsidian doc
     # Construct new frontmatter using taxonomy as definition
     #   - If field is in taxonomy AND in document already, keep and use document value
     #   - If field is in taxonomy BUT NOT in document already, add it and use default value
@@ -51,6 +54,7 @@ def main() -> int:  # returns Unix exit value
     # Regenerate YAML frontmatter and combine with content to make new document text
 
     # Write out frontmatter+content (YAML+Markdown) to desired output path
+
 
 if __name__ == '__main__':
     sys.exit(main())
