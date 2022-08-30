@@ -4,7 +4,6 @@ import logging
 
 class ObsDocument:
     """Basic class for representing Obsidian documents, aka notes"""
-
     def __init__(self):
         self.filename: str = ''
         self.lines: [str] = ['']
@@ -59,4 +58,4 @@ class ObsDocument:
             self.detect_frontmatter()
             if not self.validate_structure():
                 raise ValueError(f'{self.filename} failed structure validation')
-        return self.lines[self.frontmatterstart:self.frontmatterend]
+        return self.lines[self.frontmatterstart:self.frontmatterend+1]
