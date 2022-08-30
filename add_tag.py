@@ -39,7 +39,7 @@ def main() -> int:  # returns Unix exit value
 
     t: str
     for t in args.tag:
-        add_tag(obsdoc, t)
+        obsdoc.add_tag(t)
 
     logging.debug(f'Writing to {args.outpath}')
     with open(args.outpath, 'w') as outfile:
@@ -48,23 +48,6 @@ def main() -> int:  # returns Unix exit value
 
     logging.debug('Exiting successfully')
     return 0
-
-
-def add_tag(doc: obs_document.ObsDocument, tag: str) -> obs_document.ObsDocument:
-    """Adds specified tag to the lines contained in the ObsDocument object"""
-
-    if not doc.isWellFormed():
-        logging.info('File does not appear to begin with well-formed YAML frontmatter, exiting')
-        raise ValueError
-
-    newtagstr: str = '  - ' + tag.strip() + '\n'  # Note we are using two spaces, a dash -, a space, and the value
-
-    newlines: [str] = doc.lines[doc.frontmatterstart:(doc.tagline+1)]
-    newlines.append(newtagstr)
-    newlines.extend(doc.lines[(doc.tagline+1):])
-
-    doc.lines = newlines
-    return doc
 
 
 if __name__ == '__main__':
