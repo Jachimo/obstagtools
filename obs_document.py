@@ -4,6 +4,7 @@ import logging
 
 class ObsDocument:
     """Basic class for representing Obsidian documents, aka notes"""
+
     def __init__(self):
         self.filename: str = ''
         self.lines: [str] = ['']
@@ -29,13 +30,13 @@ class ObsDocument:
         if len(self.lines) <= 1:
             logging.debug('No lines found')
             return False
-        if not self.frontmatterstart:
+        if self.frontmatterstart is None:  # N.B.: 0 (zero) is a valid and common value for frontmatterstart!
             logging.debug('frontmatterstart is not defined')
             return False
-        if not self.frontmatterend:
+        if self.frontmatterend is None:
             logging.debug('frontmatterend is not defined')
             return False
-        if not self.tagline:
+        if self.tagline is None:
             logging.debug('tagline is not defined')
             return False
         if self.frontmatterend <= self.tagline:
@@ -50,12 +51,14 @@ class ObsDocument:
             self.detect_frontmatter()
             if not self.validate_structure():
                 raise ValueError(f'{self.filename} failed structure validation')
-        self.lines.insert(self.tagline+1, '  - ' + tag.strip() + '\n')
+        self.lines.insert(self.tagline + 1, '  - ' + tag.strip() + '\n')
 
-    def get_frontmatter(self) -> ['']:
-        """Retrieve list of strings containing lines in the frontmatter (YAML) part of the file"""
+    def get_frontmatter(self) -> str:
+        """Retrieve the YAML frontmatter section as a string.
+        Output format is designed to match input requirements of yaml.safe_load()
+        """
         if not self.validate_structure():
             self.detect_frontmatter()
             if not self.validate_structure():
                 raise ValueError(f'{self.filename} failed structure validation')
-        return self.lines[self.frontmatterstart:self.frontmatterend+1]
+        return ''.join(self.lines[self.frontmatterstart:self.frontmatterend])
