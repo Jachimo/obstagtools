@@ -1,0 +1,20 @@
+--- # Sample metadata schema
+fields:
+  - name: date
+    type: string
+    default: ~
+  - name: created
+    type: string
+    default: ~
+  - name: updated
+    type: string
+    default: ~
+  - name: url
+    type: string
+    default: ~
+  - name: publish
+    type: string
+    default: false
+  - name: tags
+    type: array
+    default: [test1, test2, test3]
