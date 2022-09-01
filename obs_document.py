@@ -51,7 +51,7 @@ class ObsDocument:
             self.detect_frontmatter()
             if not self.validate_structure():
                 raise ValueError(f'{self.filename} failed structure validation')
-        self.lines.insert(self.tagline + 1, '  - ' + tag.strip() + '\n')
+        self.lines.insert(self.tagline + 1, '  - ' + tag.strip() + '\n')  # assumes (sequence=4, offset=1) indents?
 
     def get_frontmatter(self) -> str:
         """Retrieve the YAML frontmatter section as a string.
@@ -62,3 +62,14 @@ class ObsDocument:
             if not self.validate_structure():
                 raise ValueError(f'{self.filename} failed structure validation')
         return ''.join(self.lines[self.frontmatterstart:self.frontmatterend])
+
+    def replace_frontmatter(self, newfmlines: ['']):
+        """Replace the existing frontmatter (in self.lines) with the supplied
+        list of strings, and re-run detect_frontmatter() to update properties
+        """
+        if not self.validate_structure():
+            self.detect_frontmatter()
+            if not self.validate_structure():
+                raise ValueError(f'{self.filename} failed structure validation')
+        newlines: [''] = newfmlines + self.lines[self.frontmatterend:]
+        self.lines = newlines

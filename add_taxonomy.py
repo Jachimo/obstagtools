@@ -39,28 +39,28 @@ def main() -> int:  # returns Unix exit value
 
     logging.debug(f'Reading from {args.inpath}')
 
-    with open(args.inpath, 'r') as infile:
-        obsdoc.lines = infile.readlines()
+    with open(args.inpath, 'r') as inf:
+        obsdoc.lines = inf.readlines()
         logging.debug(f'Read {len(obsdoc.lines)} lines')
 
     # Retrieve YAML frontmatter portion of the Obsidian doc
     metadata: dict = yaml.safe_load(obsdoc.get_frontmatter())
-    logging.debug(f'Frontmatter YAML parsed as:\n{metadata}\n')
+    logging.debug(f'Frontmatter YAML parsed as:\n{metadata}')
     #yaml.dump(metadata, sys.stdout)  # remove after debugging
 
     with open(args.taxonomy, 'r') as tf:
-        # Read JSON (or YAML? or simpler?) taxonomy file specifying metadata fields, types, and default values
+        # Read YAML taxonomy file specifying metadata fields and default values
         taxo: dict = yaml.safe_load(tf)
-        logging.debug(f'Taxonomy YAML parsed as:\n{taxo}\n')
+        logging.debug(f'Taxonomy YAML parsed as:\n{taxo}')
 
     # Construct new frontmatter using taxonomy as definition
     #   - If field is in taxonomy AND in document already, keep and use document value
-    #   - If field is in taxonomy BUT NOT in document already, add it and use default value
+    #   - If field is in taxonomy BUT NOT in document already, add it and use default (taxonomy-provided) value
     #   - IF NOT --clean: If field is in document BUT NOT in taxonomy, keep and use document value
     #   - IF --clean: If field is in document BUT NOT in taxonomy, remove it
 
     newfm: dict = {}  # new frontmatter
-    keylist: list = []
+    keylist: list
 
     if args.clean:  # if --clean is selected
         keylist = list(taxo.keys())  # iterate over *only* keys in the taxonomy (effectively removes all others)
@@ -69,12 +69,13 @@ def main() -> int:  # returns Unix exit value
 
     for k in keylist:  # see above how keylist depends on --clean option
         if k in metadata:
-            if (type(metadata[k]) is list) or (type(taxo[k]) is list):  # if the doc or taxo value is a list
+            if (type(metadata[k]) is list) or (type(taxo[k]) is list):  # if the doc *or* taxo value is a list
                 if type(metadata[k]) is str:
-                    metadata[k] = [metadata[k]]  # convert str into 1-item list
+                    metadata[k] = [metadata[k]]  # if either is a string, convert into 1-item list
                 if type(taxo[k]) is str:
                     taxo[k] = [taxo[k]]
-                newfm[k] = taxo[k] + metadata[k]  # combine lists
+                newfm[k] = taxo[k] + metadata[k]  # combine the lists
+                # TODO: need to deduplicate newfm - if same tag is in both doc and taxo default, shouldn't appear 2x
             else:
                 newfm[k] = metadata[k]  # for single-valued fields, prefer value on document
         else:
@@ -83,12 +84,16 @@ def main() -> int:  # returns Unix exit value
     logging.debug(f'Keeping {len(newfm)} fields, from {len(metadata.keys())} document '
                   f'and {len(taxo.keys())} taxonomy fields '
                   f'({len([key for key in taxo.keys() or metadata.keys()])} total unique)')
-    assert len(newfm) == len([key for key in taxo.keys() or metadata.keys()])
     logging.debug('New metadata:\n' + str(newfm))
 
     # Regenerate YAML frontmatter and combine with content to make new document text
+    newfmlines: [''] = (yaml.dump(newfm, default_flow_style=False)).splitlines(keepends=True)
+    obsdoc.replace_frontmatter(newfmlines)
 
     # Write out frontmatter+content (YAML+Markdown) to desired output path
+    with open(args.outpath, 'w') as outf:
+        outf.writelines(obsdoc.lines)
+
     return 0
 
 
