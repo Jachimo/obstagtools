@@ -87,7 +87,7 @@ def main() -> int:  # returns Unix exit value
     logging.debug('New metadata:\n' + str(newfm))
 
     # Regenerate YAML frontmatter and combine with content to make new document text
-    newfmlines: [''] = (yaml.dump(newfm, default_flow_style=False)).splitlines(keepends=True)
+    newfmlines: [''] = (yaml.dump(newfm, explicit_start=True, default_flow_style=False)).splitlines(keepends=True)
     obsdoc.replace_frontmatter(newfmlines)
 
     # Write out frontmatter+content (YAML+Markdown) to desired output path
