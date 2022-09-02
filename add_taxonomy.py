@@ -82,18 +82,21 @@ def main() -> int:  # returns Unix exit value
                   f'({len([key for key in taxo.keys() or metadata.keys()])} total unique)')
     logging.debug('New metadata:\n' + str(newfm))
 
-    # Serialize YAML frontmatter into lines, then replace existing frontmatter in the ObsDocument
+    # Serialize YAML frontmatter into lines
     newfmlines: [''] = (yaml.dump(newfm, explicit_start=True, default_flow_style=False)).splitlines(keepends=True)
-    obsdoc.replace_frontmatter(newfmlines)
 
     # By default, indent YAML sequences unless --noindent is specified
-    # FIXME: this doesn't work as-is, also it probably breaks more-complex YAML than Obsidian's
-    if not args.noindent:  # args.noindent defaults to False
-        for line in newfmlines:
-            if line[:2] == '- ':
-                line = '  ' + line
+    if not args.noindent:  # args.noindent defaults to False, so this is default behavior
+        for i in range(0, len(newfmlines)):
+            if (newfmlines[i][:2] == '- ') and (newfmlines[i-1][-2:] == ':\n'):
+                newfmlines[i] = '  ' + newfmlines[i]  # indent first YAML sequence item inside a mapping
+            if (newfmlines[i][:2] == '- ') and (newfmlines[i-1][:4] == '  - '):
+                newfmlines[i] = '  ' + newfmlines[i]  # indent subsequent sequence items
     else:
         logging.debug('Skipping indentation due to --noindent option')
+
+    # Replace existing frontmatter in the ObsDocument
+    obsdoc.replace_frontmatter(newfmlines)
 
     # Write out frontmatter+content (YAML+Markdown) to desired output path
     with open(args.outpath, 'w') as outf:
