@@ -23,7 +23,7 @@ def main() -> int:  # returns Unix exit value
 
     if not args.tag:
         logging.info('No tag(s) specified, exiting')
-        return 1
+        return 0
 
     if not args.outpath:
         logging.debug('No output path specified, performing in-place modification')
