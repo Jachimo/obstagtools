@@ -50,12 +50,6 @@ def main() -> int:  # returns Unix exit value
         taxo: dict = yaml.safe_load(tf)
         logging.debug(f'Taxonomy YAML parsed as:\n{taxo}')
 
-    # Construct new frontmatter using taxonomy as definition
-    #   - If field is in taxonomy AND in document already, keep and use document value
-    #   - If field is in taxonomy BUT NOT in document already, add it and use default (taxonomy-provided) value
-    #   - IF NOT --clean: If field is in document BUT NOT in taxonomy, keep and use document value (normal operation!)
-    #   - IF --clean: If field is in document BUT NOT in taxonomy, remove it (selectable, destructive operation!)
-
     newfm: dict = {}  # new frontmatter
     keylist: list
 
