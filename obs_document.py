@@ -28,7 +28,7 @@ class ObsDocument:
     def validate_structure(self) -> bool:
         """Test and ensure that self.lines has content, and frontmatterstart, frontmatterend, and tagline are set"""
         if len(self.lines) <= 1:
-            logging.debug('No lines found')
+            logging.debug('Not enough lines found')
             return False
         if self.frontmatterstart is None:  # N.B.: 0 (zero) is a valid and common value for frontmatterstart!
             logging.debug('frontmatterstart is not defined')
