@@ -18,7 +18,7 @@ class ObsDocument:
             self.frontmatterstart = 0
             logging.debug(f'Start of frontmatter found at line {self.frontmatterstart}')
         for i in range(1, len(self.lines)):
-            if self.lines[i] == 'tags:\n':  # Note: there _are_ other valid YAML ways to do tags, but not supported here
+            if self.lines[i] == 'tags:\n':  # Only block-style YAML, not flow, is supported for tags
                 self.tagline = i
                 logging.debug(f'Likely "tag:" line found at line {self.tagline}')
             if self.lines[i] == '---\n':
