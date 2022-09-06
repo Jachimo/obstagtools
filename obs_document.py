@@ -73,3 +73,26 @@ class ObsDocument:
                 raise ValueError(f'{self.filename} failed structure validation')
         newlines: [''] = newfmlines + self.lines[self.frontmatterend:]
         self.lines = newlines
+        self.detect_frontmatter()
+
+    def get_content(self) -> ['']:
+        """Retrieve the Markdown-formatted content, which is the rest of the
+        document after the end of the frontmatter.  Return a list of strings.
+        """
+        if not self.validate_structure():
+            self.detect_frontmatter()
+            if not self.validate_structure():
+                raise ValueError(f'{self.filename} failed structure validation')
+        return self.lines[self.frontmatterend:]
+
+    def set_content(self, newcontentlines: ['']):
+        """Replace the existing content (in self.lines) with the supplied
+        list of strings
+        """
+        if not self.validate_structure():
+            self.detect_frontmatter()
+            if not self.validate_structure():
+                raise ValueError(f'{self.filename} failed structure validation')
+        newlines: [''] = self.lines[:self.frontmatterend] + newcontentlines
+        self.lines = newlines
+
