@@ -12,34 +12,23 @@ def main(arguments):
     obsdoc.filename = arguments.inpath
     logging.debug(f'Reading from {arguments.inpath}')
 
-    with open(arguments.inpath, 'r') as inf:
+    with open(obsdoc.filename, 'r') as inf:
         obsdoc.lines = inf.readlines()
         logging.debug(f'Read {len(obsdoc.lines)} lines')
 
     # Retrieve YAML frontmatter portion of the Obsidian doc
-    metadata: dict = yaml.safe_load(obsdoc.get_frontmatter())
-    logging.debug(f'Frontmatter YAML parsed as:\n{metadata}')
-
-    # Retrieve Markdown content portion of the Obsidian doc
-    content: [''] = obsdoc.get_content()
-    logging.debug(f'Document content contains {len(content)} lines')
+    #metadata: dict = yaml.safe_load(obsdoc.get_frontmatter())
+    #logging.debug(f'Frontmatter YAML parsed as:\n{metadata}')
 
     # Number of lines per keyword... tune this based on density of content
     lines_per_kwd: int = 5
-    number_of_keywords: int = int(len(content) / lines_per_kwd)
+    number_of_keywords: int = int(len(obsdoc.lines[2:]) / lines_per_kwd)
 
-    # Run the content through YAKE and get keywords
-    kws: [''] = get_keywords(content[2:], number_of_keywords)  # Ignore first lines, usually a title
+    # Run the doc through YAKE and get desired number of keywords
+    kws: [''] = get_keywords(obsdoc, number_of_keywords)
 
-    newcontent: [''] = []
-    for line in content:
-        newline: str = line
-        for kw in kws:
-            if kw in line:
-                newline = newline.replace(kw, '[[' + kw + ']]', 1)
-                logging.debug(f'Found {kw} in line: {line}      Replacing line with: {newline.strip()}')
-        newcontent.append(newline)
-    obsdoc.set_content(newcontent)
+    # Wikify [[those]] terms throughout the document
+    obsdoc.wikify_terms(kws)
 
     if not arguments.outpath:
         logging.debug('No output path specified, performing in-place modification')
@@ -51,10 +40,14 @@ def main(arguments):
     return 0
 
 
-def get_keywords(textlines: [''], numberkws: int) -> ['']:
+def get_keywords(obsdoc, numberkws: int) -> ['']:
     """Use YAKE to extract a specified number of keywords from a
     list of strings representing lines of text content. Return a
     list of strings containing the keywords."""
+
+    # Retrieve Markdown content portion of the Obsidian doc, trimming off delimiter and top H1 title
+    content: [''] = obsdoc.get_content()[2:]
+    logging.debug(f'Content contains {len(content)} lines')
 
     # YAKE KeywordExtractor Configuration Parameters (play with these)
     language = 'en'
@@ -64,14 +57,13 @@ def get_keywords(textlines: [''], numberkws: int) -> ['']:
     kw_extractor = yake.KeywordExtractor(lan=language, n=max_ngram_size,
                                          dedupLim=deduplication_threshold,
                                          top=numberkws, features=None)
-    text = ''.join(textlines)
+    text = ''.join(content)
     kws = kw_extractor.extract_keywords(text)
     logging.debug(f'Keywords are:\n{kws}')
 
     keywords: [''] = []
     for k in kws:
         keywords.append(k[0])
-
     return keywords
 
 
