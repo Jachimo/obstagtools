@@ -79,7 +79,7 @@ class ObsDocument:
             raise ValueError(f'{self.filename} failed structure validation')
         return ''.join(self.lines[self.frontmatterstart:self.frontmatterend])
 
-    def replace_frontmatter(self, newfmlines: ['']):
+    def set_frontmatter(self, newfmlines: ['']):
         """Replace the existing frontmatter (in self.lines) with the supplied
         list of strings, and re-run detect_frontmatter() to update properties
         """

@@ -90,7 +90,7 @@ def main() -> int:  # returns Unix exit value
         logging.debug('Skipping indentation due to --noindent option')
 
     # Replace existing frontmatter in the ObsDocument
-    obsdoc.replace_frontmatter(newfmlines)
+    obsdoc.set_frontmatter(newfmlines)
 
     # Write out frontmatter+content (YAML+Markdown) to desired output path
     with open(args.outpath, 'w') as outf:
