@@ -5,28 +5,30 @@ import yake
 
 import obs_document
 
+LINES_PER_KEYWORD: int = 5  # adjust this based on on "density" (subjective)
 
-def wikify_document(inpath, outpath):
-    """Using YAKE to determine key words/phrases, 'wikify' the Obsidian
-    document located at inpath, and write the resulting wiki-linked version
-    to a file at outpath.
 
-    Should be safe and not corrupt Obsidian Vault .md files, but no
-    guarantees about anything else.
+def wikify_document(inpath: str, outpath: str) -> bool:
+    """Using YAKE, extract keywords and 'wikify' an Obsidian document on disk.
+
+    Uses YAKE for unsupervised automatic keyword extraction, and extracts
+    a variable number of key words/phrases based on document length.
+    All key words/phrases are then wrapped in [[brackets]] so that they are
+    treated as internal wiki-type links by Obsidian and appear in the
+    knowledge graph.
+
+    Args:
+        inpath: path to the input Obsidian YAML+Markdown document.
+        outpath: path to write the wikified file to (if absent, modify input in-place).
+
+    Returns:
+        True if completed successfully.
     """
-    obsdoc = obs_document.ObsDocument()  # see obs_document.py
-
-    obsdoc.filename = inpath
-    logging.debug(f'Reading from {inpath}')
-    with open(obsdoc.filename, 'r') as inf:
-        obsdoc.lines = inf.readlines()
-        logging.debug(f'Read {len(obsdoc.lines)} lines')
-
-    # Number of lines per keyword... tune this based on density of content
-    lines_per_kwd: int = 10
-    number_of_keywords: int = int(len(obsdoc.lines[2:]) / lines_per_kwd)
+    obsdoc = obs_document.ObsDocument(inpath)
 
     # Run the doc through YAKE and get desired number of keywords
+    lines_per_kwd: int = LINES_PER_KEYWORD
+    number_of_keywords: int = int(len(obsdoc.lines[2:]) / lines_per_kwd)
     kws: [''] = get_keywords(obsdoc, number_of_keywords)
 
     # Wikify those [[terms]] throughout the document
@@ -35,34 +37,43 @@ def wikify_document(inpath, outpath):
     if not outpath:
         logging.debug('No output path specified, performing in-place modification')
         outpath = inpath
-
     logging.debug(f'Writing to {outpath}')
-    with open(outpath, 'w') as outf:
-        outf.writelines(obsdoc.lines)
+
+    with open(outpath, 'w') as f:
+        f.writelines(obsdoc.lines)
         logging.debug(f'Wrote {len(obsdoc.lines)} lines, with {len(kws)} wikified keywords')
-    return 0
+
+    return True
 
 
-def get_keywords(obsdoc, numberkws: int) -> ['']:
-    """Use YAKE to extract a specified number of keywords from a
-    list of strings representing lines of text content. Return a
-    list of strings containing the keywords."""
+def get_keywords(obsdoc: obs_document.ObsDocument, numberkws: int) -> ['']:
+    """Extract specified number of keywords from an Obsidian document.
 
-    # Retrieve Markdown content portion of the Obsidian doc, trimming off delimiter and top H1 title
-    content: [''] = obsdoc.get_content()[2:]
-    logging.debug(f'Content contains {len(content)} lines')
+    Uses YAKE to extract a specified number of keywords from the content
+    of an Obsidian document (where the content is a list of strings).
+    Returns a list of strings containing the keywords.
 
+    Args:
+        obsdoc: instance of obs_document.ObsDoc to extract keywords from
+        numberkws: integer number of keywords to extract
+    Returns:
+        list of strings containing the keywords found
+    """
     # YAKE KeywordExtractor Configuration Parameters (play with these)
     language = 'en'
     max_ngram_size = 3
     deduplication_threshold = 0.3  # limits the duplication of words in different keywords; 0.9 is lenient (allowed)
 
+    # Retrieve Markdown content portion of the Obsidian doc, trimming off delimiter and top H1 title
+    content: [''] = obsdoc.get_content()[2:]
+    logging.debug(f'Content contains {len(content)} lines')
+
     kw_extractor = yake.KeywordExtractor(lan=language, n=max_ngram_size,
                                          dedupLim=deduplication_threshold,
                                          top=numberkws, features=None)
     text: str = ''.join(content)  # TODO ignore lines that start with # (hash/pound) symbol, usually titles
-    kws: [] = kw_extractor.extract_keywords(text)  # returns Union[list, list[tuple[Any, Any]]]
-    logging.debug(f'Keywords are:\n{kws}')
+    kws: [] = kw_extractor.extract_keywords(text)  # returns [(str, float)]
+    logging.debug(f'YAKE returned:\n{kws}')
 
     keywords: [''] = []
     for k in kws:
@@ -70,7 +81,7 @@ def get_keywords(obsdoc, numberkws: int) -> ['']:
     return keywords
 
 
-if __name__ == '__main__':
+def main() -> int:  # This is mostly for test purposes
     parser = argparse.ArgumentParser(description='Use YAKE to extract keywords from Obsidian document content')
     parser.add_argument('inpath', help='Input file to read from')
     parser.add_argument('outpath', nargs='?', default=False,
@@ -84,7 +95,11 @@ if __name__ == '__main__':
     else:
         logging.basicConfig(level=logging.INFO)
 
-    # This is mostly for test purposes
-    sys.exit(
-        wikify_document(args.inpath, args.outpath)
-    )
+    if wikify_document(args.inpath, args.outpath):
+        return 0
+    else:
+        return 1
+
+
+if __name__ == '__main__':
+    sys.exit(main())

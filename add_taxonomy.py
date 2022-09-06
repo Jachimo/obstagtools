@@ -31,17 +31,10 @@ def main() -> int:  # returns Unix exit value
         logging.debug('No output path specified, performing in-place modification')
         args.outpath = args.inpath
 
-    obsdoc = obs_document.ObsDocument()  # see obs_document.py
-    obsdoc.filename = args.inpath
-
-    logging.debug(f'Reading from {args.inpath}')
-
-    with open(args.inpath, 'r') as inf:
-        obsdoc.lines = inf.readlines()
-        logging.debug(f'Read {len(obsdoc.lines)} lines')
+    obsdoc = obs_document.ObsDocument(args.inpath)  # see obs_document.py
 
     # Retrieve YAML frontmatter portion of the Obsidian doc
-    metadata: dict = yaml.safe_load(obsdoc.get_frontmatter())
+    metadata: dict = yaml.safe_load(obsdoc.get_frontmatter_str())
     logging.debug(f'Frontmatter YAML parsed as:\n{metadata}')
 
     # Read YAML taxonomy file specifying metadata fields and default values
