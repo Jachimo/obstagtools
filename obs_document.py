@@ -108,7 +108,7 @@ class ObsDocument:
 
     def wikify_terms(self, termslist: ['']):
         """Make *all* occurrences of each of the list of terms into
-        an intenal wiki-type link, by enclosing in [[double brackets]]
+        an internal wiki-type link, by enclosing in [[double brackets]]
         """
         newcontent: [''] = []
         for line in self.get_content():
