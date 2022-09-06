@@ -25,11 +25,11 @@ def main(arguments):
     logging.debug(f'Document content contains {len(content)} lines')
 
     # Number of lines per keyword... tune this based on density of content
-    lines_per_kwd: int = 7
+    lines_per_kwd: int = 5
     number_of_keywords: int = int(len(content) / lines_per_kwd)
 
     # Run the content through YAKE and get keywords
-    kws: [''] = get_keywords(content, number_of_keywords)
+    kws: [''] = get_keywords(content[2:], number_of_keywords)  # Ignore first lines, usually a title
 
     newcontent: [''] = []
     for line in content:
@@ -37,15 +37,16 @@ def main(arguments):
         for kw in kws:
             if kw in line:
                 newline = newline.replace(kw, '[[' + kw + ']]', 1)
-                logging.debug(f'Found {kw} in line: {line}Replacing line with: {newline.strip()}')
+                logging.debug(f'Found {kw} in line: {line}      Replacing line with: {newline.strip()}')
         newcontent.append(newline)
     obsdoc.set_content(newcontent)
 
-    if not args.outpath:
+    if not arguments.outpath:
         logging.debug('No output path specified, performing in-place modification')
-        args.outpath = args.inpath
+        arguments.outpath = arguments.inpath
 
-    with open(args.outpath, 'w') as outf:
+    logging.debug(f'Writing to {arguments.outpath}')
+    with open(arguments.outpath, 'w') as outf:
         outf.writelines(obsdoc.lines)
     return 0
 
@@ -57,7 +58,7 @@ def get_keywords(textlines: [''], numberkws: int) -> ['']:
 
     # YAKE KeywordExtractor Configuration Parameters (play with these)
     language = 'en'
-    max_ngram_size = 1
+    max_ngram_size = 2
     deduplication_threshold = 0.9  # limits the duplication of words in different keywords; 0.9 is lenient (allowed)
 
     kw_extractor = yake.KeywordExtractor(lan=language, n=max_ngram_size,
