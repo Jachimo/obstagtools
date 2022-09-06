@@ -164,6 +164,7 @@ class ObsDocument(object):
 
         Args:
             termslist: list of strings containing the terms to be linked.
+            TODO(@Jachimo) - add boolean parameter for wikify-first-occurrence-only
         """
         newcontent: [''] = []
         for line in self.get_content():

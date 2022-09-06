@@ -2,7 +2,6 @@
 import argparse
 import logging
 import sys
-
 import oyaml as yaml
 
 import obs_document
@@ -49,7 +48,7 @@ def main() -> int:  # returns Unix exit value
     if args.clean:  # if --clean is selected
         keylist = list(taxo.keys())  # iterate over *only* keys in the taxonomy (effectively removes all others)
     else:  # but normally, when --clean is *not* selected
-        keylist = list(set(taxo.keys()).union(set(metadata.keys())))  # iterate over all keys in *both* lists
+        keylist = list(set(taxo.keys()).union(set(metadata.keys())))  # TODO(@Jachimo) this re-orders the fields! :(
 
     for k in keylist:  # see above how keylist depends on --clean option
         if k in metadata:

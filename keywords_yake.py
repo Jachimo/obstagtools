@@ -71,7 +71,7 @@ def get_keywords(obsdoc: obs_document.ObsDocument, numberkws: int) -> ['']:
     kw_extractor = yake.KeywordExtractor(lan=language, n=max_ngram_size,
                                          dedupLim=deduplication_threshold,
                                          top=numberkws, features=None)
-    text: str = ''.join(content)  # TODO ignore lines that start with # (hash/pound) symbol, usually titles
+    text: str = ''.join(content)  # TODO(@Jachimo) ignore lines that start with # (hash/pound) symbol, usually titles
     kws: [] = kw_extractor.extract_keywords(text)  # returns [(str, float)]
     logging.debug(f'YAKE returned:\n{kws}')
 
