@@ -27,7 +27,7 @@ class ObsDocument:
 
     def validate_structure(self) -> bool:
         """Test and ensure that self.lines has content, and frontmatterstart, frontmatterend, and tagline are set"""
-        if len(self.lines) <= 1:
+        if len(self.lines) <= 3:
             logging.debug('Not enough lines found')
             return False
         if self.frontmatterstart is None:  # N.B.: 0 (zero) is a valid and common value for frontmatterstart!
@@ -45,32 +45,46 @@ class ObsDocument:
         else:
             return True
 
+    def validate(self, try_redetect=True) -> bool:
+        """Run validation(s) on the document and return True if passed, False if failed.
+        The try_redetect= option re-runs detect_frontmatter() if validation fails, then
+        re-tries validation before giving a final result.
+        """
+        if try_redetect:  # try_redetect= if validation fails, re-run detect_frontmatter() and try again
+            if self.validate_structure():
+                return True
+            else:
+                self.detect_frontmatter()
+                if self.validate_structure():
+                    return True
+                else:
+                    return False
+        else:
+            if self.validate_structure():
+                return True
+            else:
+                return False
+
     def add_tag(self, tag: str):
         """Adds specified tag to the document frontmatter"""
-        if not self.validate_structure():
-            self.detect_frontmatter()
-            if not self.validate_structure():
-                raise ValueError(f'{self.filename} failed structure validation')
+        if not self.validate():
+            raise ValueError(f'{self.filename} failed structure validation')
         self.lines.insert(self.tagline + 1, '  - ' + tag.strip() + '\n')  # assumes (sequence=4, offset=1) indents?
 
     def get_frontmatter(self) -> str:
         """Retrieve the YAML frontmatter section as a string.
         Output format is designed to match input requirements of yaml.safe_load()
         """
-        if not self.validate_structure():
-            self.detect_frontmatter()
-            if not self.validate_structure():
-                raise ValueError(f'{self.filename} failed structure validation')
+        if not self.validate():
+            raise ValueError(f'{self.filename} failed structure validation')
         return ''.join(self.lines[self.frontmatterstart:self.frontmatterend])
 
     def replace_frontmatter(self, newfmlines: ['']):
         """Replace the existing frontmatter (in self.lines) with the supplied
         list of strings, and re-run detect_frontmatter() to update properties
         """
-        if not self.validate_structure():
-            self.detect_frontmatter()
-            if not self.validate_structure():
-                raise ValueError(f'{self.filename} failed structure validation')
+        if not self.validate():
+            raise ValueError(f'{self.filename} failed structure validation')
         newlines: [''] = newfmlines + self.lines[self.frontmatterend:]
         self.lines = newlines
         self.detect_frontmatter()
@@ -79,20 +93,16 @@ class ObsDocument:
         """Retrieve the Markdown-formatted content, which is the rest of the
         document after the end of the frontmatter.  Return a list of strings.
         """
-        if not self.validate_structure():
-            self.detect_frontmatter()
-            if not self.validate_structure():
-                raise ValueError(f'{self.filename} failed structure validation')
+        if not self.validate():
+            raise ValueError(f'{self.filename} failed structure validation')
         return self.lines[self.frontmatterend:]
 
     def set_content(self, newcontentlines: ['']):
         """Replace the existing content (in self.lines) with the supplied
         list of strings
         """
-        if not self.validate_structure():
-            self.detect_frontmatter()
-            if not self.validate_structure():
-                raise ValueError(f'{self.filename} failed structure validation')
+        if not self.validate():
+            raise ValueError(f'{self.filename} failed structure validation')
         newlines: [''] = self.lines[:self.frontmatterend] + newcontentlines
         self.lines = newlines
 
