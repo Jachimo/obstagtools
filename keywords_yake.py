@@ -6,6 +6,7 @@ import yake
 import obs_document
 
 LINES_PER_KEYWORD: int = 5  # adjust this based on on "density" (subjective)
+MAX_KEYWORD_SIZE: int = 1   # max 'n-gram' size of the 'keywords' (if >1, more accurately 'key phrases')
 
 
 def wikify_document(inpath: str, outpath: str) -> bool:
@@ -60,9 +61,9 @@ def get_keywords(obsdoc: obs_document.ObsDocument, numberkws: int) -> ['']:
         list of strings containing the keywords found
     """
     # YAKE KeywordExtractor Configuration Parameters (play with these)
-    language = 'en'
-    max_ngram_size = 3
-    deduplication_threshold = 0.3  # limits the duplication of words in different keywords; 0.9 is lenient (allowed)
+    language: str = 'en'
+    max_ngram_size: int = MAX_KEYWORD_SIZE
+    deduplication_threshold: float = 0.3  # limits the duplication of words in multi-word results; 0.9 is lenient
 
     # Retrieve Markdown content portion of the Obsidian doc, trimming off delimiter and top H1 title
     content: [''] = obsdoc.get_content()[2:]
