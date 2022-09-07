@@ -48,7 +48,8 @@ def main() -> int:  # returns Unix exit value
     if args.clean:  # if --clean is selected
         keylist = list(taxo.keys())  # iterate over *only* keys in the taxonomy (effectively removes all others)
     else:  # but normally, when --clean is *not* selected
-        keylist = list(set(taxo.keys()).union(set(metadata.keys())))  # TODO(@Jachimo) this re-orders the fields! :(
+        keylist = list(taxo.keys())
+        keylist.extend(x for x in list(metadata.keys()) if x not in keylist)  # https://stackoverflow.com/a/43325018/
 
     for k in keylist:  # see above how keylist depends on --clean option
         if k in metadata:
