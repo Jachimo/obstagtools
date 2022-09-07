@@ -94,7 +94,7 @@ def get_keywords(obsdoc: obs_document.ObsDocument, numberkws: int) -> ['']:
 
 
 def main() -> int:  # This is mostly for test purposes
-    parser = argparse.ArgumentParser(description='Use YAKE to extract keywords from Obsidian document content')
+    parser = argparse.ArgumentParser(description='Use YAKE to make wikilinks from [[keywords]] in an Obsidian document')
     parser.add_argument('inpath', help='Input file to read from')
     parser.add_argument('outpath', nargs='?', default=False,
                         help='Output file to write to (if not provided, modify input file in-place)')
