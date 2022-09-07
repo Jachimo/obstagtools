@@ -156,7 +156,7 @@ class ObsDocument(object):
         newlines: [''] = self.lines[:self._frontmatterend] + newcontentlines
         self.lines = newlines
 
-    def wikify_terms(self, termslist: ['']) -> None:
+    def wikify_terms(self, termslist: list, firstonly: bool = False, skipheaders: bool = False) -> None:
         """Wikify supplied terms by placing them in [[brackets]].
 
         Default behavior is to place brackets around *every* occurrence
@@ -164,12 +164,22 @@ class ObsDocument(object):
 
         Args:
             termslist: list of strings containing the terms to be linked.
-            TODO(@Jachimo) - add boolean parameter for wikify-first-occurrence-only
+            firstonly: if True, only wikify the first occurrence of the term (default False)
+            skipheaders: if True, lines starting with '#' will not be wikified (default False)
         """
         newcontent: [''] = []
         for line in self.get_content():
+            if skipheaders:
+                if line[0] == '#':
+                    newcontent.append(line)
+                    continue
             newline: str = line
             for term in termslist:
-                newline = newline.replace(term, '[[' + term + ']]')
+                if term in line:
+                    if firstonly:
+                        newline = newline.replace(term, '[[' + term + ']]', 1)
+                        termslist.remove(term)
+                    else:
+                        newline = newline.replace(term, '[[' + term + ']]')
             newcontent.append(newline)
         self.set_content(newcontent)

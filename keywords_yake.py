@@ -31,8 +31,8 @@ def wikify_document(inpath: str, outpath: str) -> bool:
     number_of_keywords: int = int(len(obsdoc.lines[2:]) / lines_per_kwd)
     kws: [''] = get_keywords(obsdoc, number_of_keywords)
 
-    # Wikify those [[terms]] throughout the document
-    obsdoc.wikify_terms(kws)
+    # Wikify those [[terms]]
+    obsdoc.wikify_terms(kws, firstonly=True, skipheaders=True)
 
     if not outpath:
         logging.debug('No output path specified, performing in-place modification')
@@ -41,7 +41,7 @@ def wikify_document(inpath: str, outpath: str) -> bool:
 
     with open(outpath, 'w') as f:
         f.writelines(obsdoc.lines)
-        logging.debug(f'Wrote {len(obsdoc.lines)} lines, with {len(kws)} wikified keywords')
+        logging.debug(f'Wrote {len(obsdoc.lines)} lines')
 
     return True
 
