@@ -170,12 +170,14 @@ class ObsDocument(object):
             skipheaders: if True, lines starting with '#' will not be wikified (default False)
         """
         newcontent: List[str] = []
+        line: str
         for line in self.get_content():
             if skipheaders:
                 if line[0] == '#':
                     newcontent.append(line)
                     continue
             newline: str = line
+            term: str
             for term in termslist:
                 if term in line:
                     if firstonly:
