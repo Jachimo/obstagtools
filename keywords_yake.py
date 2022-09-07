@@ -71,7 +71,18 @@ def get_keywords(obsdoc: obs_document.ObsDocument, numberkws: int) -> ['']:
     kw_extractor = yake.KeywordExtractor(lan=language, n=max_ngram_size,
                                          dedupLim=deduplication_threshold,
                                          top=numberkws, features=None)
-    text: str = ''.join(content)  # TODO(@Jachimo) ignore lines that start with # (hash/pound) symbol, usually titles
+
+    # Filter the content to remove any lines we don't want contributing to keywords, e.g. titles/subtitles
+    filteredcontent: [''] = []
+    for line in content:
+        if not line.strip():  # for whitespace-only lines
+            continue
+        if line.strip()[0] == '#':  # for titles
+            continue
+        else:
+            filteredcontent.append(line)
+    text: str = ''.join(filteredcontent)
+
     kws: [] = kw_extractor.extract_keywords(text)  # returns [(str, float)]
     logging.debug(f'YAKE returned:\n{kws}')
 
