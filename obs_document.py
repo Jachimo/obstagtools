@@ -12,7 +12,7 @@ class ObsDocument(object):
         """
         self.filename: str = filename
         with open(self.filename, 'r') as f:
-            self.lines: [str] = f.readlines()
+            self.lines: List[str] = f.readlines()
         self._frontmatterstart: Optional[int] = None  # line index of first "---\n"
         self._frontmatterend: Optional[int] = None  # line index of second "---\n"
         self._tagline: Optional[int] = None  # line index of "tags:\n"
