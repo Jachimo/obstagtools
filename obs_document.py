@@ -4,14 +4,13 @@ from typing import Optional, List
 
 
 class ObsDocument(object):
-    """Represents an Obsidian document, aka a note file
-
-    Attributes:
-        filename: string; path to the Obsidian .md file to read
-        lines: list of strings; contents of the entire document
-    """
     def __init__(self, filename: str):
-        self.filename = filename
+        """Initialize an ObsDocument object
+
+        Args:
+            filename: path to a valid Obsidian .md file
+        """
+        self.filename: str = filename
         with open(self.filename, 'r') as f:
             self.lines: [str] = f.readlines()
         self._frontmatterstart: Optional[int] = None  # line index of first "---\n"
