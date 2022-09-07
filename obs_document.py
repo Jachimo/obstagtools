@@ -1,6 +1,6 @@
 # Class for working with Obsidian-flavor Markdown+YAML documents
 import logging
-from typing import Optional
+from typing import Optional, List
 
 
 class ObsDocument(object):
@@ -100,7 +100,7 @@ class ObsDocument(object):
             raise ValueError(f'{self.filename} failed structure validation')
         self.lines.insert(self._tagline + 1, '  - ' + tag.strip() + '\n')  # assumes (sequence=4, offset=1) indents?
 
-    def get_frontmatter(self) -> ['']:
+    def get_frontmatter(self) -> List[str]:
         """Retrieve YAML frontmatter section as list of strings.
 
         Returns:
@@ -119,7 +119,7 @@ class ObsDocument(object):
         """
         return ''.join(self.get_frontmatter())
 
-    def set_frontmatter(self, newfmlines: ['']) -> None:
+    def set_frontmatter(self, newfmlines: List[str]) -> None:
         """Replace the document's frontmatter.
 
         Args:
@@ -127,11 +127,11 @@ class ObsDocument(object):
         """
         if not self.validate():
             raise ValueError(f'{self.filename} failed structure validation')
-        newlines: [''] = newfmlines + self.lines[self._frontmatterend:]
+        newlines: List[str] = newfmlines + self.lines[self._frontmatterend:]
         self.lines = newlines
         self.detect_frontmatter()
 
-    def get_content(self) -> ['']:
+    def get_content(self) -> List[str]:
         """Retrieve the Markdown-formatted content.
 
         The 'content' is the rest of the document AFTER the end of the frontmatter,
@@ -145,7 +145,7 @@ class ObsDocument(object):
             raise ValueError(f'{self.filename} failed structure validation')
         return self.lines[self._frontmatterend:]
 
-    def set_content(self, newcontentlines: ['']) -> None:
+    def set_content(self, newcontentlines: List[str]) -> None:
         """Replace the document content.
 
         Args:
@@ -153,10 +153,13 @@ class ObsDocument(object):
         """
         if not self.validate():
             raise ValueError(f'{self.filename} failed structure validation')
-        newlines: [''] = self.lines[:self._frontmatterend] + newcontentlines
+        newlines: List[str] = self.lines[:self._frontmatterend] + newcontentlines
         self.lines = newlines
 
-    def wikify_terms(self, termslist: list, firstonly: bool = False, skipheaders: bool = False) -> None:
+    def wikify_terms(self,
+                     termslist: list,
+                     firstonly: bool = False,
+                     skipheaders: bool = False) -> None:
         """Wikify supplied terms by placing them in [[brackets]].
 
         Default behavior is to place brackets around *every* occurrence
@@ -167,7 +170,7 @@ class ObsDocument(object):
             firstonly: if True, only wikify the first occurrence of the term (default False)
             skipheaders: if True, lines starting with '#' will not be wikified (default False)
         """
-        newcontent: [''] = []
+        newcontent: List[str] = []
         for line in self.get_content():
             if skipheaders:
                 if line[0] == '#':
