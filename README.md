@@ -113,6 +113,37 @@ optional arguments:
   --noindent            Do not indent YAML sequences (may break other tools)
   --debug               Enable debug mode (verbose output)
 ```
+
+## keywords_yake.py
+Experimental auto-keyword-linking tool, using YAKE to extract keywords from an Obsidian document's content, and then
+making occurrences of each keyword into Obsidian-style [[double bracket]] links, for knowledge graphing.
+
+### Usage
+
+```Text
+usage: keywords_yake.py [-h] [--debug] inpath [outpath]
+
+Use YAKE to make wikilinks from [[keywords]] in an Obsidian document
+
+positional arguments:
+  inpath      Input file to read from
+  outpath     Output file to write to (if not provided, modify input file in-place)
+
+optional arguments:
+  -h, --help  show this help message and exit
+  --debug     Enable debug mode (verbose output)
+```
+
+### Limitations and Notes
+
+Currently this tool only analyzes a single document for keyword extraction, so there's no guarantee that keywords found in one document will be found anywhere else, limiting the usefulness of the internal wiki-style links it generates.
+Also, it has some significant flaws and limitations:
+
+- If a keyword consists of multiple words (which happens if `MAX_KEYWORD_SIZE` > 1) and it's broken across more than one line in the text, it won't be linked.
+- Also if `MAX_KEYWORD_SIZE` > 1, it is possible for one keyword to be a subset of another (e.g. 'memory allocation' and 'memory' might both be extracted as keywords from the same document), which will result in nested wikilinks in the output (e.g. "The buddy [[[[memory]] allocation]] technique"), which Obsidian doesn't like.
+
+While of admittedly limited utility as a standalone program, the `get_keywords()` function might be useful for other, more complex applications, like building up a list of keywords across multiple documents prior to wikification.
+
 ## Additional Notes
 
 ### Required Structure
