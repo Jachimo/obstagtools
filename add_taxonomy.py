@@ -55,10 +55,11 @@ def main() -> int:  # returns Unix exit value
         if k in metadata:
             if (type(metadata[k]) is list) or (type(taxo[k]) is list):  # if the doc *or* taxo value is a list
                 if type(metadata[k]) is str:
-                    metadata[k] = [metadata[k]]  # make sure that they are *both* lists so we can combine
+                    metadata[k] = [metadata[k]]  # make sure that they are *both* lists...
                 if type(taxo[k]) is str:
                     taxo[k] = [taxo[k]]
-                newfm[k] = list(set(taxo[k] + metadata[k]))  # combine the lists, remove duplicates with list(set([]))
+                newfm[k] = taxo[k]
+                newfm[k].extend(x for x in metadata[k] if x not in newfm[k])  # combine, preserving order
             else:
                 newfm[k] = metadata[k]  # for single-valued fields, prefer value on document
         else:
