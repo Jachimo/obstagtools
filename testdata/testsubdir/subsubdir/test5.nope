@@ -1,0 +1,19 @@
+---
+created: "2022-09-10 01:24 EDT"
+testvalue: True
+tags:
+  - testfile/negative
+  - invalid
+alias: "Fifth Sample Obsidian Document"
+name: "Test Document Invalid-5"
+---
+# Obsidian Test Document Invalid 5
+This is a test file which lacks an appropriate `.md` suffix, and as a
+result should _not_ be picked up or acted upon by most utilities, unless
+they are smart enough to actually scan the content of the file.
+
+## On the Continued Dangers of Gardens
+
+> You may go into the fields or down the lane, but don’t go into
+> Mr. McGregor’s garden. Your Father had an accident there; he was put
+> in a pie by Mrs. McGregor.

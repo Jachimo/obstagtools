@@ -1,8 +1,10 @@
 ---
 created: "2022-09-01 16:44 EDT"
+testvalue: True
 tags:
   - testfile
 alias: "Obsidian Keyword Test"
+name: "Semantic Test Document"
 ---
 # Obsidian Keyword Test Document
 

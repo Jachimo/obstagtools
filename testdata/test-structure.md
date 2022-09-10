@@ -1,10 +1,12 @@
 ---
 created: "2022-08-30 23:30 EDT"
+testvalue: False
 tags:
   - testfile
   - example
   - programming/yaml
 alias: "Sample Obsidian Document"
+name: "Structure Test Document"
 ---
 # Sample Obsidian Structured Text Document
 This is a sample of a structured text document using an Obsidian-style
