@@ -8,6 +8,7 @@ import os
 from typing import List
 import oyaml as yaml
 
+import obs_document
 
 def main() -> int:
     parser = argparse.ArgumentParser(description='Filter an Obsidian vault based on document metadata')
@@ -47,7 +48,7 @@ def main() -> int:
         logging.info('Input path must refer to a directory.')
         return 1
 
-    # Build list of files to filter
+    # Build list of files to filter, based on extension
     filelist: List[str] = []
     for root, dirs, files in os.walk(args.inpath):
         for f in files:
@@ -56,6 +57,11 @@ def main() -> int:
     logging.debug(f'Filelist is: {filelist}')
 
     # Inspect and try to decode each file (try... around the initial parsing, and log errors?)
+    for fp in filelist:
+        logging.debug(f'Attempting to parse {fp}')
+        obsdoc = obs_document.ObsDocument(fp)
+        metadata: dict = yaml.safe_load(obsdoc.get_frontmatter_str())
+        logging.debug(f'Frontmatter YAML parsed as:\n{metadata}')
 
     # Remove files that do not match criteria from list
 
