@@ -9,6 +9,26 @@ LINES_PER_KEYWORD: int = 5  # adjust this based on on "density" (subjective)
 MAX_KEYWORD_SIZE: int = 1   # max 'n-gram' size of the 'keywords' (if >1, more accurately 'key phrases')
 
 
+def main() -> int:
+    parser = argparse.ArgumentParser(description='Use YAKE to make wikilinks from [[keywords]] in an Obsidian document')
+    parser.add_argument('inpath', help='Input file to read from')
+    parser.add_argument('outpath', nargs='?', default=False,
+                        help='Output file to write to (if not provided, modify input file in-place)')
+    parser.add_argument('--debug', help='Enable debug mode (verbose output)', action='store_true')
+    args = parser.parse_args()
+
+    if args.debug:
+        logging.basicConfig(level=logging.DEBUG)
+        logging.debug('Debug output enabled')
+    else:
+        logging.basicConfig(level=logging.INFO)
+
+    if wikify_document(args.inpath, args.outpath):
+        return 0
+    else:
+        return 1
+
+
 def wikify_document(inpath: str, outpath: str) -> bool:
     """Using YAKE, extract keywords and 'wikify' an Obsidian document on disk.
 
@@ -91,26 +111,6 @@ def get_keywords(obsdoc: obs_document.ObsDocument, numberkws: int) -> ['']:
     for k in kws:
         keywords.append(k[0])  # we only care about the keyword string itself, not the numeric score
     return keywords
-
-
-def main() -> int:  # This is mostly for test purposes
-    parser = argparse.ArgumentParser(description='Use YAKE to make wikilinks from [[keywords]] in an Obsidian document')
-    parser.add_argument('inpath', help='Input file to read from')
-    parser.add_argument('outpath', nargs='?', default=False,
-                        help='Output file to write to (if not provided, modify input file in-place)')
-    parser.add_argument('--debug', help='Enable debug mode (verbose output)', action='store_true')
-    args = parser.parse_args()
-
-    if args.debug:
-        logging.basicConfig(level=logging.DEBUG)
-        logging.debug('Debug output enabled')
-    else:
-        logging.basicConfig(level=logging.INFO)
-
-    if wikify_document(args.inpath, args.outpath):
-        return 0
-    else:
-        return 1
 
 
 if __name__ == '__main__':
