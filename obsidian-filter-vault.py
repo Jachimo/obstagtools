@@ -61,13 +61,31 @@ def main() -> int:
         logging.debug(f'Attempting to parse {fp}')
         obsdoc = obs_document.ObsDocument(fp)
         metadata: dict = yaml.safe_load(obsdoc.get_frontmatter_str())
-        logging.debug(f'Frontmatter YAML parsed as:\n{metadata}')
+        logging.debug(f'Document metadata parsed as:\n{metadata}')
 
-    # Remove files that do not match criteria from list
+        # Remove files that do not match criteria from list
+        if args.fieldvalue[0] == '+':
+            if args.filterfield in metadata:
+                # For single-value fields where metadata[args.filterfield] is str:
+                if type(metadata[args.filterfield]) is str:
+                    if args.fieldvalue[1:] == metadata[args.filterfield]:
+                        continue
+                # For multi-value fields where metadata[args.filterfield] is List(str):
+                if type(metadata[args.filterfield]) is list:
+                    if args.fieldvalue[1:] in metadata[args.filterfield]:
+                        continue
+            else:
+                # TODO remove the item from the filelist
+        if args.fieldvalue[0] == '-':
+            # TODO ... if we find the field in the metadata keys AND the value in the metadata[field] values,
+            #  then we remove it from the list; all other fields remain on the list
 
-    # Do something (move, copy) the remaining files on the list
+        # Do something (move, copy) to the files on the list
 
-    return 0
+    for fp in filelist:
+
+
+    return 0  # success
 
 
 if __name__ == '__main__':
