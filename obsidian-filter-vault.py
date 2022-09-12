@@ -54,7 +54,7 @@ def main() -> int:
         for f in files:
             if f.split('.')[-1] in allowedextensions:
                 filelist.append(f'{root}{os.sep}{f}')
-    logging.debug(f'Filelist is: {filelist}')
+    logging.debug(f'Unfiltered filelist contains {len(filelist)} items')
 
     # Inspect and try to decode each file (try... around the initial parsing, and log errors?)
     for fp in filelist:
@@ -66,24 +66,33 @@ def main() -> int:
         # Remove files that do not match criteria from list
         if args.fieldvalue[0] == '+':
             if args.filterfield in metadata:
-                # For single-value fields where metadata[args.filterfield] is str:
-                if type(metadata[args.filterfield]) is str:
-                    if args.fieldvalue[1:] == metadata[args.filterfield]:
-                        continue
-                # For multi-value fields where metadata[args.filterfield] is List(str):
-                if type(metadata[args.filterfield]) is list:
+                logging.debug(f'Found field "{args.filterfield}" in {metadata}')
+                logging.debug(f'Value of field "{args.filterfield}" is "{metadata[args.filterfield]}", '
+                              f'type {type(metadata[args.filterfield])}')
+                if type(metadata[args.filterfield]) is list:  # Handle case where the value on the doc is a list
                     if args.fieldvalue[1:] in metadata[args.filterfield]:
                         continue
+                if type(metadata[args.filterfield]) in [str, bool, float, int]:  # Handle single-value cases
+                    if args.fieldvalue[1:] == metadata[args.filterfield]:
+                        continue
+                # if type(metadata[args.filterfield]) is dict:
+                    # TODO: handle dict-type fields on document
             else:
-                # TODO remove the item from the filelist
+                logging.debug(f'Attempting to remove {fp} from {filelist}')
+                filelist.remove(fp)
         if args.fieldvalue[0] == '-':
-            # TODO ... if we find the field in the metadata keys AND the value in the metadata[field] values,
-            #  then we remove it from the list; all other fields remain on the list
+            if args.filterfield in metadata:
+                if type(metadata[args.filterfield]) is list:
+                    if args.fieldvalue[1:] in metadata[args.filterfield]:
+                        filelist.remove(fp)
+                if type(metadata[args.filterfield]) in [str, bool, float, int]:
+                    if args.fieldvalue[1:] == metadata[args.filterfield]:
+                        filelist.remove(fp)
+            else:
+                continue
+    logging.debug(f'Filtered filelist now contains {len(filelist)} items')
 
-        # Do something (move, copy) to the files on the list
-
-    for fp in filelist:
-
+    # Do something (move, copy) to the files on the list
 
     return 0  # success
 
