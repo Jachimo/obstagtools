@@ -54,14 +54,19 @@ def main() -> int:
         for f in files:
             if f.split('.')[-1] in ALLOWED_FILE_EXTENSIONS:
                 filelist.append(f'{root}{os.sep}{f}')
-    logging.debug(f'Unfiltered filelist contains {len(filelist)} items')
+    logging.debug(f'Unfiltered filelist contains {len(filelist)} items: {filelist}')
 
     # Convert the user-supplied string to the proper datatype
     filterfieldvalue = yaml.safe_load(args.fieldvalue)
-    logging.debug(f'Filter field value is {filterfieldvalue} (type {type(filterfieldvalue)})')
+    logging.debug(f'Operation will {args.operation} '
+                  f'if {args.filterfield} '
+                  f'matches {filterfieldvalue} '
+                  f'(type {type(filterfieldvalue)})')
 
-    # Inspect each file and prune filelist as appropriate
+    # Inspect each file and create outputlist as appropriate
+    outputlist = []
     for fp in filelist:
+        logging.debug(f'Beginning parsing of: {fp}')
         obsdoc = obs_document.ObsDocument(fp)
         metadata: dict = yaml.safe_load(obsdoc.get_frontmatter_str())
         logging.debug(f'{fp} metadata parsed as:\n{metadata}')
@@ -71,40 +76,50 @@ def main() -> int:
             if args.filterfield in metadata:
                 if type(metadata[args.filterfield]) is list:  # Handle case where the value on the doc is a list
                     if filterfieldvalue in metadata[args.filterfield]:
-                        continue
-                    else:
-                        filelist.remove(fp)
-                if type(metadata[args.filterfield]) in [str, bool, float, int]:  # Handle single-value cases
+                        outputlist.append(fp)
+                elif type(metadata[args.filterfield]) in [str, bool, float, int]:  # Handle single-value cases
                     if filterfieldvalue == metadata[args.filterfield]:
-                        continue
-                    else:
-                        filelist.remove(fp)
-                if type(metadata[args.filterfield]) is dict:
+                        outputlist.append(fp)
+                elif type(metadata[args.filterfield]) is dict:
                     # TODO: handle dict-type fields on document
                     logging.info(f'Matching against dictionary is not currently supported; skipping {fp}')
-                    filelist.remove(fp)
+                    continue
             else:
-                filelist.remove(fp)
+                logging.debug(f'Field {args.filterfield} not found in doc {fp}; not including in output')
+                continue
 
         # If operation == EXCLUDE, means filterfield MUST NOT CONTAIN OR MATCH specified filterfieldvalue
         if args.operation in ['EXCLUDE', 'exclude']:
             if args.filterfield in metadata:
+                logging.debug(f'Field {args.filterfield} (value {metadata[args.filterfield]}, type {type(metadata[args.filterfield])}) found in doc {fp}')
                 if type(metadata[args.filterfield]) is list:
                     if filterfieldvalue in metadata[args.filterfield]:
-                        filelist.remove(fp)
-                if type(metadata[args.filterfield]) in [str, bool, float, int]:
+                        continue
+                    else:
+                        outputlist.append(fp)
+                elif type(metadata[args.filterfield]) in [str, bool, float, int]:
                     if filterfieldvalue == metadata[args.filterfield]:
-                        filelist.remove(fp)
-                if type(metadata[args.filterfield]) is dict:
+                        continue
+                    else:
+                        outputlist.append(fp)
+                elif type(metadata[args.filterfield]) is dict:
                     # TODO: handle dict-type fields on document
-                    logging.info(f'Matching against dictionary is not currently supported; skipping {fp}')
-                    filelist.remove(fp)
+                    logging.info(f'Matching against dictionary is not currently supported; removing {fp}')
+                    continue
+                else:
+                    raise ValueError(f'Unknown datatype in {fp}, '
+                                     f'field {args.filterfield}, '
+                                     f'value {metadata[args.filterfield]}, '
+                                     f'type {type(metadata[args.filterfield])}')
             else:
-                continue
-    logging.debug(f'Filtered filelist now contains {len(filelist)} items')
+                logging.debug(f'Field {args.filterfield} not found in doc {fp}; appending to output')
+                outputlist.append(fp)
+    logging.debug(f'Filtered filelist now contains {len(outputlist)} items')
+
+    # TODO: Go through each of the files and add any linked attachments to a separate list to be copied...
 
     # Do something (move, copy) to the files on the list
-    for fp in filelist:
+    for fp in outputlist:
         newfp = f'{args.outpath.strip(os.sep)}{os.sep}{fp.strip(os.sep).split(os.sep, 1)[-1]}'
         pathlib.Path(os.path.dirname(newfp)).mkdir(parents=True, exist_ok=True)  # create dir tree if needed
         if args.command in ['COPY', 'copy']:
@@ -112,6 +127,7 @@ def main() -> int:
             shutil.copy(fp, newfp)
         if args.command in ['MOVE', 'move']:
             logging.info('Command "move" is not yet implemented, sorry.')
+            # TODO: Implement; for MOVE, we actually move the Markdown files, but only copy the attachments for safety
             pass
 
     return 0  # success
