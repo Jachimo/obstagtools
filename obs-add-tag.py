@@ -26,6 +26,7 @@ def main() -> int:  # returns Unix exit value
     else:
         rootlogger.setLevel(logging.INFO)
 
+    # Input sanity checks
     if not args.tag:
         logger.info('No tag(s) specified, exiting')
         return 0

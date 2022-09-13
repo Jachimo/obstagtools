@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
-# obsidian-filter-vault.py
+# obs-filter-vault.py
 #  Filters an Obsidian "Vault" based on document metadata
+#  Part of 'Obsidian Tag Tools': https://github.com/Jachimo/obstagtools
 #  Requires Python 3.5+, tested using Python 3.9
 
 import sys
@@ -15,10 +16,12 @@ import shutil
 
 import obs_document
 
-
+# Both SKIP_DIRS and ATTACHMENT_DIRS are excluded from the search for Obsidian notes files
 SKIP_DIRS: List[str] = ['Templates', '.obsidian']
 ATTACHMENT_DIRS: List[str] = ['Attachments']
-ALLOWED_FILE_EXTENSIONS: List[str] = ['md', 'markdown', 'mdown', 'mkdn', 'obs']  # edit as needed, e.g. for .txt
+
+# Only files with one of the ALLOWED_FILE_EXTENSIONS are considered possible Obsidian notes
+ALLOWED_FILE_EXTENSIONS: List[str] = ['md', 'markdown', 'mdown', 'mkdn', 'obs']
 
 
 def main() -> int:
@@ -55,7 +58,7 @@ def main() -> int:
         if len(os.listdir(args.outpath)) != 0:
             if not args.force:
                 logger.warning(f'Destination directory {args.outpath} is not empty '
-                                'and --force not specified; aborting.')
+                               'and --force not specified; aborting.')
                 return 1
 
     # Build list of files to filter, based on extension
@@ -66,16 +69,16 @@ def main() -> int:
                 continue
             elif any(s in root for s in ATTACHMENT_DIRS):  # or ATTACHMENT_DIRS
                 continue
-            elif f.split('.')[-1] in ALLOWED_FILE_EXTENSIONS:  # see top of file
+            elif f.split('.')[-1] in ALLOWED_FILE_EXTENSIONS:
                 filelist.append(f'{root}{os.sep}{f}')
-    logger.debug(f'Unfiltered filelist contains {len(filelist)}')  # items: {filelist}')
+    logger.debug(f'Unfiltered filelist contains {len(filelist)}')
 
     # Convert the user-supplied string to the proper datatype
     filterfieldvalue: Any = yaml.safe_load(args.fieldvalue)
     logger.debug(f'Operation will {args.operation} '
-                  f'if {args.filterfield} '
-                  f'matches {filterfieldvalue} '
-                  f'(type {type(filterfieldvalue)})')
+                 f'if {args.filterfield} '
+                 f'matches {filterfieldvalue} '
+                 f'(type {type(filterfieldvalue)})')
 
     # Inspect each file and create outputlist as appropriate
     outputlist: List[obs_document.ObsDocument] = []
@@ -107,10 +110,9 @@ def main() -> int:
 
         # If operation == EXCLUDE...
         if args.operation in ['EXCLUDE', 'exclude']:
-            if args.filterfield in metadata:
-                #logger.debug(f'Field {args.filterfield} (value {metadata[args.filterfield]}, type {type(metadata[args.filterfield])}) found in doc {fp}')
-                if type(metadata[args.filterfield]) is list:
-                    if filterfieldvalue in metadata[args.filterfield]:
+            if args.filterfield in obsdoc.metadata:
+                if type(obsdoc.metadata[args.filterfield]) is list:
+                    if filterfieldvalue in obsdoc.metadata[args.filterfield]:
                         continue
                     else:
                         outputlist.append(obsdoc)
@@ -130,10 +132,9 @@ def main() -> int:
             else:
                 logger.debug(f'Field {args.filterfield} not found in doc {fp}; appending to output')
                 outputlist.append(obsdoc)
-
     logger.debug(f'Filtered filelist now contains {len(outputlist)} items')
 
-    # Do something (move, copy) with the files on the list
+    # Create a new directory hierarchy and copy/move the files on the list into it
     for doc in outputlist:
         newfp = f'{args.outpath.strip(os.sep)}{os.sep}{doc.filename.strip(os.sep).split(os.sep, 1)[-1]}'
         pathlib.Path(os.path.dirname(newfp)).mkdir(parents=True, exist_ok=True)  # create dir tree if needed

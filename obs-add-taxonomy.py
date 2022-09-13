@@ -81,8 +81,8 @@ def main() -> int:  # returns Unix exit value
             newfm[k] = taxo[k]  # ...just use default value from taxonomy file
 
     logger.debug(f'Keeping {len(newfm)} fields, from {len(metadata.keys())} document '
-                  f'and {len(taxo.keys())} taxonomy fields '
-                  f'({len([key for key in taxo.keys() or metadata.keys()])} total unique)')
+                 f'and {len(taxo.keys())} taxonomy fields '
+                 f'({len([key for key in taxo.keys() or metadata.keys()])} total unique)')
     logger.debug('New metadata:\n' + str(newfm))
 
     # Serialize YAML frontmatter into lines
