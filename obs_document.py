@@ -1,6 +1,10 @@
 # Class for working with Obsidian-flavor Markdown+YAML documents
+
 import logging
 from typing import Optional, List
+
+# Set up logging
+logger = logging.getLogger(__name__)
 
 
 class ObsDocument(object):
@@ -23,14 +27,14 @@ class ObsDocument(object):
         """
         if self.lines[0] == '---\n':
             self._frontmatterstart = 0
-            logging.debug(f'Start of frontmatter found at line {self._frontmatterstart}')
+            logger.debug(f'Start of frontmatter found at line {self._frontmatterstart}')
         for i in range(1, len(self.lines)):
             if self.lines[i] == 'tags:\n':  # Only block-style YAML, not flow, is supported for tags
                 self._tagline = i
-                logging.debug(f'Likely "tag:" line found at line {self._tagline}')
+                logger.debug(f'Likely "tag:" line found at line {self._tagline}')
             if self.lines[i] == '---\n':
                 self._frontmatterend = i
-                logging.debug(f'Likely end of frontmatter found at line {self._frontmatterend}')
+                logger.debug(f'Likely end of frontmatter found at line {self._frontmatterend}')
 
     def validate_structure(self) -> bool:
         """Check whether important properties have been set
@@ -47,19 +51,19 @@ class ObsDocument(object):
             False if any validation checks have failed.
         """
         if len(self.lines) <= 3:
-            logging.debug('Not enough lines found')
+            logger.debug('Not enough lines found')
             return False
         if self._frontmatterstart is None:  # N.B.: 0 (zero) is a valid and common value for frontmatterstart!
-            logging.debug('frontmatter start is not defined')
+            logger.debug('frontmatter start is not defined')
             return False
         if self._frontmatterend is None:
-            logging.debug('frontmatter end is not defined')
+            logger.debug('frontmatter end is not defined')
             return False
         if self._tagline is None:
-            logging.debug('tag line is not defined')
+            logger.debug('tag line is not defined')
             return False
         if self._frontmatterend <= self._tagline:
-            logging.debug('frontmatter end is before tag line, which should not happen')
+            logger.debug('frontmatter end is before tag line, which should not happen')
             return False
         else:
             return True

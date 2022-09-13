@@ -36,20 +36,26 @@ def main() -> int:
     parser.add_argument('--debug', action='store_true', help='Enable debug mode (verbose output)')
     args = parser.parse_args()
 
+    # Set up logging
+    rootlogger = logging.getLogger()
+    logger = logging.getLogger(__name__)
+    log_format: str = "[%(filename)20s,%(lineno)3s:%(funcName)20s] %(message)s"
+    logging.basicConfig(format=log_format)
     if args.debug:
-        logging.basicConfig(level=logging.DEBUG)
-        logging.debug('Debug output enabled')
+        rootlogger.setLevel(logging.DEBUG)
+        logger.debug('Debug output enabled')
     else:
-        logging.basicConfig(level=logging.INFO)
+        rootlogger.setLevel(logging.INFO)
 
     # Input sanity checks
     if not os.path.isdir(args.inpath):
-        logging.info('Input path must refer to a directory.')
+        logger.info('Input path must refer to a directory.')
         return 1
     if os.path.isdir(args.outpath):
         if len(os.listdir(args.outpath)) != 0:
             if not args.force:
-                logging.info(f'Destination directory {args.outpath} is not empty and --force not specified; aborting.')
+                logger.warning(f'Destination directory {args.outpath} is not empty '
+                                'and --force not specified; aborting.')
                 return 1
 
     # Build list of files to filter, based on extension
@@ -62,11 +68,11 @@ def main() -> int:
                 continue
             elif f.split('.')[-1] in ALLOWED_FILE_EXTENSIONS:  # see top of file
                 filelist.append(f'{root}{os.sep}{f}')
-    logging.debug(f'Unfiltered filelist contains {len(filelist)} items: {filelist}')
+    logger.debug(f'Unfiltered filelist contains {len(filelist)}')  # items: {filelist}')
 
     # Convert the user-supplied string to the proper datatype
     filterfieldvalue: Any = yaml.safe_load(args.fieldvalue)
-    logging.debug(f'Operation will {args.operation} '
+    logger.debug(f'Operation will {args.operation} '
                   f'if {args.filterfield} '
                   f'matches {filterfieldvalue} '
                   f'(type {type(filterfieldvalue)})')
@@ -74,10 +80,10 @@ def main() -> int:
     # Inspect each file and create outputlist as appropriate
     outputlist: List[str] = []
     for fp in filelist:
-        logging.debug(f'Parsing: {fp}')
+        logger.debug(f'Parsing: {fp}')
         obsdoc: obs_document.ObsDocument = obs_document.ObsDocument(fp)
         metadata: dict = yaml.safe_load(obsdoc.get_frontmatter_str())
-        #logging.debug(f'{fp} metadata parsed as:\n{metadata}')
+        #logger.debug(f'{fp} metadata parsed as:\n{metadata}')
 
         # If operation == INCLUDE...
         if args.operation in ['INCLUDE', 'include']:
@@ -97,13 +103,13 @@ def main() -> int:
                                      f'value {metadata[args.filterfield]}, '
                                      f'type {type(metadata[args.filterfield])}')
             else:
-                logging.debug(f'Field {args.filterfield} not found in doc {fp}; not including in output')
+                logger.debug(f'Field {args.filterfield} not found in doc {fp}; not including in output')
                 continue
 
         # If operation == EXCLUDE...
         if args.operation in ['EXCLUDE', 'exclude']:
             if args.filterfield in metadata:
-                #logging.debug(f'Field {args.filterfield} (value {metadata[args.filterfield]}, type {type(metadata[args.filterfield])}) found in doc {fp}')
+                #logger.debug(f'Field {args.filterfield} (value {metadata[args.filterfield]}, type {type(metadata[args.filterfield])}) found in doc {fp}')
                 if type(metadata[args.filterfield]) is list:
                     if filterfieldvalue in metadata[args.filterfield]:
                         continue
@@ -123,20 +129,20 @@ def main() -> int:
                                      f'value {metadata[args.filterfield]}, '
                                      f'type {type(metadata[args.filterfield])}')
             else:
-                logging.debug(f'Field {args.filterfield} not found in doc {fp}; appending to output')
+                logger.debug(f'Field {args.filterfield} not found in doc {fp}; appending to output')
                 outputlist.append(fp)
 
-    logging.debug(f'Filtered filelist now contains {len(outputlist)} items')
+    logger.debug(f'Filtered filelist now contains {len(outputlist)} items')
 
     # Do something (move, copy) with the files on the list
     for fp in outputlist:
         newfp = f'{args.outpath.strip(os.sep)}{os.sep}{fp.strip(os.sep).split(os.sep, 1)[-1]}'
         pathlib.Path(os.path.dirname(newfp)).mkdir(parents=True, exist_ok=True)  # create dir tree if needed
         if args.command in ['COPY', 'copy']:
-            logging.debug(f'Copying: {fp} -> {newfp}')
+            logger.debug(f'Copying: {fp} -> {newfp}')
             shutil.copy(fp, newfp)
         if args.command in ['MOVE', 'move']:
-            logging.debug(f'Moving: {fp} -> {newfp}')
+            logger.debug(f'Moving: {fp} -> {newfp}')
             shutil.move(fp, newfp)
 
     return 0  # success

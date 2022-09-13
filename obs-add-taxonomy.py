@@ -20,27 +20,32 @@ def main() -> int:  # returns Unix exit value
     parser.add_argument('--debug', help='Enable debug mode (verbose output)', action='store_true')
     args = parser.parse_args()
 
+    # Set up logging
+    rootlogger = logging.getLogger()
+    logger = logging.getLogger(__name__)
+    log_format: str = "[%(filename)20s,%(lineno)3s:%(funcName)20s] %(message)s"
+    logging.basicConfig(format=log_format)
     if args.debug:
-        logging.basicConfig(level=logging.DEBUG)
-        logging.debug('Debug output enabled')
+        rootlogger.setLevel(logging.DEBUG)
+        logger.debug('Debug output enabled')
     else:
-        logging.basicConfig(level=logging.INFO)
+        rootlogger.setLevel(logging.INFO)
 
     if not args.outpath:
-        logging.debug('No output path specified, performing in-place modification')
+        logger.debug('No output path specified, performing in-place modification')
         args.outpath = args.inpath
 
     obsdoc = obs_document.ObsDocument(args.inpath)  # see obs_document.py
 
     # Retrieve YAML frontmatter portion of the Obsidian doc
     metadata: dict = yaml.safe_load(obsdoc.get_frontmatter_str())
-    logging.debug(f'Frontmatter YAML parsed as:\n{metadata}')
+    logger.debug(f'Frontmatter YAML parsed as:\n{metadata}')
 
     # Read YAML taxonomy file specifying metadata fields and default values
-    logging.debug(f'Attempting to read taxonomy from {args.taxonomy}')
+    logger.debug(f'Attempting to read taxonomy from {args.taxonomy}')
     with open(args.taxonomy, 'r') as tf:
         taxo: dict = yaml.safe_load(tf)
-        logging.debug(f'Taxonomy YAML parsed as:\n{taxo}')
+        logger.debug(f'Taxonomy YAML parsed as:\n{taxo}')
 
     newfm: dict = {}  # new frontmatter
     keylist: list
@@ -75,10 +80,10 @@ def main() -> int:  # returns Unix exit value
             logger.debug(f'Field "{k}" not found on doc, using default value "{taxo[k]}"')
             newfm[k] = taxo[k]  # ...just use default value from taxonomy file
 
-    logging.debug(f'Keeping {len(newfm)} fields, from {len(metadata.keys())} document '
+    logger.debug(f'Keeping {len(newfm)} fields, from {len(metadata.keys())} document '
                   f'and {len(taxo.keys())} taxonomy fields '
                   f'({len([key for key in taxo.keys() or metadata.keys()])} total unique)')
-    logging.debug('New metadata:\n' + str(newfm))
+    logger.debug('New metadata:\n' + str(newfm))
 
     # Serialize YAML frontmatter into lines
     newfmlines: [''] = (yaml.dump(newfm, explicit_start=True, default_flow_style=False)).splitlines(keepends=True)
@@ -91,7 +96,7 @@ def main() -> int:  # returns Unix exit value
             if (newfmlines[i][:2] == '- ') and (newfmlines[i-1][:4] == '  - '):
                 newfmlines[i] = '  ' + newfmlines[i]  # indent subsequent sequence items
     else:
-        logging.debug('Skipping indentation due to --noindent option')
+        logger.debug('Skipping indentation due to --noindent option')
 
     # Replace existing frontmatter in the ObsDocument
     obsdoc.set_frontmatter(newfmlines)

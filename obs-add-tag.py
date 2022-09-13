@@ -15,39 +15,43 @@ def main() -> int:  # returns Unix exit value
     parser.add_argument('--debug', help='Enable debug mode (verbose output)', action='store_true')
     args = parser.parse_args()
 
+    # Set up logging
+    rootlogger = logging.getLogger()
+    logger = logging.getLogger(__name__)
+    log_format: str = "[%(filename)20s,%(lineno)3s:%(funcName)20s] %(message)s"
+    logging.basicConfig(format=log_format)
     if args.debug:
-        logging.basicConfig(level=logging.DEBUG)
-        logging.debug('Debug output enabled')
+        rootlogger.setLevel(logging.DEBUG)
+        logger.debug('Debug output enabled')
     else:
-        logging.basicConfig(level=logging.INFO)
+        rootlogger.setLevel(logging.INFO)
 
     if not args.tag:
-        logging.info('No tag(s) specified, exiting')
+        logger.info('No tag(s) specified, exiting')
         return 0
-
     if not args.outpath:
-        logging.debug('No output path specified, performing in-place modification')
+        logger.debug('No output path specified, performing in-place modification')
         args.outpath = args.inpath
 
     obsdoc: obs_document.ObsDocument
     obsdoc = obs_document.ObsDocument()  # see obs_document.py
 
-    logging.debug(f'Reading from {args.inpath}')
+    logger.debug(f'Reading from {args.inpath}')
     with open(args.inpath, 'r') as infile:
         obsdoc.filename = args.inpath
         obsdoc.lines = infile.readlines()
-        logging.debug(f'Read {len(obsdoc.lines)} lines')
+        logger.debug(f'Read {len(obsdoc.lines)} lines')
 
     t: str
     for t in args.tag:
         obsdoc.add_tag(t)
 
-    logging.debug(f'Writing to {args.outpath}')
+    logger.debug(f'Writing to {args.outpath}')
     with open(args.outpath, 'w') as outfile:
         outfile.writelines(obsdoc.lines)
-        logging.debug(f'Wrote {len(obsdoc.lines)} lines')
+        logger.debug(f'Wrote {len(obsdoc.lines)} lines')
 
-    logging.debug('Exiting successfully')
+    logger.debug('Exiting successfully')
     return 0
 
 

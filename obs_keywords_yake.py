@@ -17,11 +17,16 @@ def main() -> int:
     parser.add_argument('--debug', help='Enable debug mode (verbose output)', action='store_true')
     args = parser.parse_args()
 
+    # Set up logging
+    rootlogger = logging.getLogger()
+    logger = logging.getLogger(__name__)
+    log_format: str = "[%(filename)20s,%(lineno)3s:%(funcName)20s] %(message)s"
+    logging.basicConfig(format=log_format)
     if args.debug:
-        logging.basicConfig(level=logging.DEBUG)
-        logging.debug('Debug output enabled')
+        rootlogger.setLevel(logging.DEBUG)
+        logger.debug('Debug output enabled')
     else:
-        logging.basicConfig(level=logging.INFO)
+        rootlogger.setLevel(logging.INFO)
 
     if wikify_document(args.inpath, args.outpath):
         return 0
@@ -45,6 +50,7 @@ def wikify_document(inpath: str, outpath: str) -> bool:
     Returns:
         True if completed successfully.
     """
+    logger = logging.getLogger(__name__)
     obsdoc = obs_document.ObsDocument(inpath)
 
     # Run the doc through YAKE and get desired number of keywords
@@ -56,13 +62,13 @@ def wikify_document(inpath: str, outpath: str) -> bool:
     obsdoc.wikify_terms(kws, firstonly=True, skipheaders=True)
 
     if not outpath:
-        logging.debug('No output path specified, performing in-place modification')
+        logger.debug('No output path specified, performing in-place modification')
         outpath = inpath
-    logging.debug(f'Writing to {outpath}')
+    logger.debug(f'Writing to {outpath}')
 
     with open(outpath, 'w') as f:
         f.writelines(obsdoc.lines)
-        logging.debug(f'Wrote {len(obsdoc.lines)} lines')
+        logger.debug(f'Wrote {len(obsdoc.lines)} lines')
 
     return True
 
@@ -80,6 +86,8 @@ def get_keywords(obsdoc: obs_document.ObsDocument, numberkws: int) -> ['']:
     Returns:
         list of strings containing the keywords found
     """
+    logger = logging.getLogger(__name__)
+
     # YAKE KeywordExtractor Configuration Parameters (play with these)
     language: str = 'en'
     max_ngram_size: int = MAX_KEYWORD_SIZE
@@ -87,7 +95,7 @@ def get_keywords(obsdoc: obs_document.ObsDocument, numberkws: int) -> ['']:
 
     # Retrieve Markdown content portion of the Obsidian doc, trimming off delimiter and top H1 title
     content: [''] = obsdoc.get_content()[2:]
-    logging.debug(f'Content contains {len(content)} lines')
+    logger.debug(f'Content contains {len(content)} lines')
 
     kw_extractor = yake.KeywordExtractor(lan=language, n=max_ngram_size,
                                          dedupLim=deduplication_threshold,
@@ -105,7 +113,7 @@ def get_keywords(obsdoc: obs_document.ObsDocument, numberkws: int) -> ['']:
     text: str = ''.join(filteredcontent)
 
     kws: [] = kw_extractor.extract_keywords(text)  # returns [(str, float)]
-    logging.debug(f'YAKE returned:\n{kws}')
+    logger.debug(f'YAKE returned:\n{kws}')
 
     keywords: [''] = []
     for k in kws:
