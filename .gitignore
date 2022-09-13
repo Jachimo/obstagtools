@@ -237,4 +237,5 @@ fabric.properties
 .idea/caches/build_file_checksums.ser
 
 # obstagtools specific
-/testout.md
+testout.md
+testout/
