@@ -2,7 +2,7 @@
 
 Some tools for working with Obsidian-flavor (YAML frontmatter + Markdown content) notes files.
 
-## add_tag.py
+## obs-add-tag.py
 
 Simple, quick-and-dirty tool for batch-adding tags to a Markdown document,
 meant for scripting.
@@ -10,18 +10,6 @@ meant for scripting.
 Minimal dependencies: only `sys`, `argparse`, and `logging`.
 
 ### Usage  
-
-- In-place modification: `./add_tag.py targetfile.md -t tag1 tag2`  
-- Copy-on-write (safer!): `./add_tag.py targetfile.md copyfile.md -t tag1 tag2`
-
-Tags can be either single-level (e.g. `cats`) or nested (`predators/cats`).
-If a desired tag contains spaces, enclose it in double-quotes;
-otherwise, tags are assumed to be space-delimited.
-
-**Effect**:  
-- _Prepends_ one or more specified tag values (`tag1`, `tag2`) to the list of tags in the YAML frontmatter.
-
-### Help Text
 
 ```Text
 usage: add_tag.py [-h] [--tag TAG [TAG ...]] [--debug] inpath [outpath]
@@ -38,6 +26,20 @@ optional arguments:
                         Tag values to add to the document
   --debug               Enable debug mode (verbose output)
 ```
+
+**Effect**:  
+- _Prepends_ one or more specified tag values (`tag1`, `tag2`) to the list of tags in the YAML frontmatter.
+
+Note that there are two distinct modes of operation, "in-place" and "copy-on-write".
+Copy-on-write, where the user supplies an output file path, is _significantly safer_ 
+and does not write to the target file (`targetfile.md` in the examples below) at all.
+
+- In-place modification: `./add_tag.py targetfile.md -t tag1 tag2`  
+- Copy-on-write (safer!): `./add_tag.py targetfile.md copyfile.md -t tag1 tag2`
+
+Tags can be either single-level (e.g. `cats`) or nested (`predators/cats`).
+If a desired tag contains spaces, enclose it in double-quotes;
+otherwise, tags are assumed to be space-delimited.
 
 Although specifying one or more tags with `--tag` or `-t` is _technically_ optional,
 (and the tool will exit with status 0 if none are given), it's not especially useful.
@@ -57,7 +59,65 @@ find ~/MyVault.obs/ \
 -exec /path/to/obstagtools/add_tag.py {} -t vacation places/sandiego \;
 ```
 
-## add_taxonomy.py
+## obs-filter-vault.py
+
+Copy or move documents from an existing Obsidian vault into a new, similarly-structured folder tree.
+Useful for "filtering" a vault's contents, creating a copy that only contains (or excludes) documents with a specified
+metadata field:value.
+
+### Usage
+
+```Text
+usage: obs-filter-vault.py [-h] [--force] [--debug] inpath outpath {COPY,MOVE} filterfield {EXCLUDE,INCLUDE} fieldvalue
+
+Filter an Obsidian vault based on document metadata
+
+positional arguments:
+  inpath             Source vault path
+  outpath            Destination path (must be empty unless --force is used)
+  {COPY,MOVE}        Command to execute
+  filterfield        Metadata field to filter by (e.g. "tags")
+  {EXCLUDE,INCLUDE}  Whether output must INCLUDE or EXCLUDE the specified field value from output set
+  fieldvalue         Field value (e.g. "personal")
+
+optional arguments:
+  -h, --help         show this help message and exit
+  --force            Perform operation even if outpath is not empty (WARNING: will clobber!)
+  --debug            Enable debug mode (verbose output)
+```
+
+### Use Cases
+
+#### Create Vault Without Personal Files
+
+**Scenario:** I have a Obsidian Vault full of work notes, `Worknotes.obs/` that I would
+like to pass along to a colleague, _except for_ the notes that are specifically tagged as 'personal' 
+(i.e. they have a YAML frontmatter field named `tags` which contains the value `personal`).
+
+```shell
+$ obs-filter-vault.py Worknotes.obs Worknotes-filtered.obs COPY tags EXCLUDE personal
+```
+
+This command reads recursively from `Worknotes.obs`, writes to `Worknotes-filtered.obs`,
+and will `COPY` notes _except_ if they have a metadata field `tags` with a value `personal`, in which case they
+will be **excluded** (due to the `EXCLUDE` option) from the copy.
+
+#### Extract Personal Files From Vault
+
+**Scenario:** Similar to the above, I have a `Worknotes.obs` vault containing some notes tagged 'personal'.
+But this time, I'd like to _move_ those personal notes out of Worknotes and into a new directory tree, rooted
+at `Personal.obs` (which must either not exist, or be empty, unless `--force` is selected).
+
+```shell
+$ obs-filter-vault.py Worknotes.obs Personal.obs MOVE tags INCLUDE personal
+```
+
+This command `MOVE`s notes meeting the criteria (`tags INCLUDE personal`), so any note tagged as 'personal'
+in its frontmatter will be moved out of Worknotes and into Personal.
+Note that the `.obsidian` directory (containing Vault-specific settings, caches, etc.), `Attachments`, and `Templates`
+are _not copied_ or moved by default.
+
+## obs-add-taxonomy.py
 
 This tool updates the metadata fields in an Obsidian document's frontmatter
 to match the fields provided in a 'taxonomy' file (by default named `metadata.yaml`
@@ -114,9 +174,11 @@ optional arguments:
   --debug               Enable debug mode (verbose output)
 ```
 
-## keywords_yake.py
-Experimental auto-keyword-linking tool, using YAKE to extract keywords from an Obsidian document's content, and then
-making occurrences of each keyword into Obsidian-style [[double bracket]] links, for knowledge graphing.
+## obs_keywords_yake.py
+**Very experimental** auto-keyword-linking tool, which uses YAKE to extract keywords from an Obsidian document's
+content, and then makes occurrences of each keyword into Obsidian-style [[double bracket]] links.
+The intended use is for creating knowledge graphs and finding unknown linkages between documents, but it is not
+well-suited for that purpose yet.
 
 ### Usage
 
@@ -134,7 +196,7 @@ optional arguments:
   --debug     Enable debug mode (verbose output)
 ```
 
-### Limitations and Notes
+### Limitations
 
 Currently this tool only analyzes a single document for keyword extraction, so there's no guarantee that keywords found in one document will be found anywhere else, limiting the usefulness of the internal wiki-style links it generates.
 Also, it has some significant flaws and limitations:
@@ -144,11 +206,11 @@ Also, it has some significant flaws and limitations:
 
 While of admittedly limited utility as a standalone program, the `get_keywords()` function might be useful for other, more complex applications, like building up a list of keywords across multiple documents prior to wikification.
 
-## Additional Notes
+## General Info
 
 ### Required Structure
 
-The specified input file must be a "well formed" YAML+Markdown document, consisting of: 
+The specified input file(s) must be "well formed" YAML+Markdown documents, consisting of: 
 
 - The string `---\n` (that's three hyphens, followed by a line ending character such as LF), **and nothing else**, on the first line of the file; followed by 
 - YAML data, specifically containing a sequence named 'tags' with one or more values, represented using block-style YAMP (_not_ flow!) syntax_; then
@@ -156,7 +218,7 @@ The specified input file must be a "well formed" YAML+Markdown document, consist
 - The content, formatted with Markdown
 - EOF
 
-## YAML Block vs. Flow Style
+### YAML Block vs. Flow Style
 
 **YAML Block Style**  
 This is the style I use for all Obsidian tags.
