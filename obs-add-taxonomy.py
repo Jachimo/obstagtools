@@ -52,18 +52,28 @@ def main() -> int:  # returns Unix exit value
         keylist.extend(x for x in list(metadata.keys()) if x not in keylist)  # https://stackoverflow.com/a/43325018/
 
     for k in keylist:  # see above how keylist depends on --clean option
-        if k in metadata:
-            if (type(metadata[k]) is list) or (type(taxo[k]) is list):  # if the doc *or* taxo value is a list
-                if type(metadata[k]) is str:
-                    metadata[k] = [metadata[k]]  # make sure that they are *both* lists...
-                if type(taxo[k]) is str:
-                    taxo[k] = [taxo[k]]
-                newfm[k] = taxo[k]
-                newfm[k].extend(x for x in metadata[k] if x not in newfm[k])  # combine, preserving order
+        logger.debug(f'Processing field "{k}"')
+        if k in metadata:  # if field exists on the document...
+            logger.debug(f'Field "{k}" exists on document, type {type(metadata[k])}')
+            if k in taxo:  # AND on the taxonomy...
+                logger.debug(f'Field "{k}" also exists on taxonomy, type {type(taxo[k])}')
+                if (type(metadata[k]) is list) or (type(taxo[k]) is list):  # if either value is a list
+                    if type(metadata[k]) is str:
+                        metadata[k] = [metadata[k]]  # make sure that they are *both* lists...
+                    if type(taxo[k]) is str:
+                        taxo[k] = [taxo[k]]
+                    newfm[k] = taxo[k]
+                    newfm[k].extend(x for x in metadata[k] if x not in newfm[k])  # ...and combine, preserving order
+                    logger.debug(f'Combined doc list {metadata[k]} with taxo list {taxo[k]}, yielding {newfm[k]}')
+                else:  # for anything else other than a list...
+                    logger.debug(f'Preserving doc value "{metadata[k]}"')
+                    newfm[k] = metadata[k]  # ...just use the value on the document, overriding taxonomy default
             else:
-                newfm[k] = metadata[k]  # for single-valued fields, prefer value on document
-        else:
-            newfm[k] = taxo[k]  # if field not on doc already, use default value from taxonomy file
+                logger.debug(f'Field "{k}" found on doc but not in taxo, preserving doc value "{metadata[k]}"')
+                newfm[k] = metadata[k]
+        else:  # but if field is NOT on doc already...
+            logger.debug(f'Field "{k}" not found on doc, using default value "{taxo[k]}"')
+            newfm[k] = taxo[k]  # ...just use default value from taxonomy file
 
     logging.debug(f'Keeping {len(newfm)} fields, from {len(metadata.keys())} document '
                   f'and {len(taxo.keys())} taxonomy fields '
