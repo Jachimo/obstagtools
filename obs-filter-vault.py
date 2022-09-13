@@ -16,9 +16,9 @@ import shutil
 import obs_document
 
 
-ALLOWED_FILE_EXTENSIONS: List[str] = ['md', 'markdown', 'mdown', 'mdkn', 'obs']  # edit as needed, e.g. for .txt
 SKIP_DIRS: List[str] = ['Templates', '.obsidian']
 ATTACHMENT_DIRS: List[str] = ['Attachments']
+ALLOWED_FILE_EXTENSIONS: List[str] = ['md', 'markdown', 'mdown', 'mkdn', 'obs']  # edit as needed, e.g. for .txt
 
 
 def main() -> int:
@@ -56,8 +56,11 @@ def main() -> int:
     filelist: List[str] = []
     for root, dirs, files in os.walk(args.inpath):
         for f in files:
-            # TODO: don't add files from SKIP_DIRS or ATTACHMENT_DIRS
-            if f.split('.')[-1] in ALLOWED_FILE_EXTENSIONS:  # see top of file
+            if any(s in root for s in SKIP_DIRS):  # don't add files from SKIP_DIRS
+                continue
+            elif any(s in root for s in ATTACHMENT_DIRS):  # or ATTACHMENT_DIRS
+                continue
+            elif f.split('.')[-1] in ALLOWED_FILE_EXTENSIONS:  # see top of file
                 filelist.append(f'{root}{os.sep}{f}')
     logging.debug(f'Unfiltered filelist contains {len(filelist)} items: {filelist}')
 
