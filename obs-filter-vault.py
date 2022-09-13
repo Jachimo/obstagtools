@@ -78,30 +78,29 @@ def main() -> int:
                   f'(type {type(filterfieldvalue)})')
 
     # Inspect each file and create outputlist as appropriate
-    outputlist: List[str] = []
+    outputlist: List[obs_document.ObsDocument] = []
     for fp in filelist:
-        logger.debug(f'Parsing: {fp}')
-        obsdoc: obs_document.ObsDocument = obs_document.ObsDocument(fp)
-        metadata: dict = yaml.safe_load(obsdoc.get_frontmatter_str())
-        #logger.debug(f'{fp} metadata parsed as:\n{metadata}')
+        obsdoc: obs_document.ObsDocument
+        obsdoc = obs_document.ObsDocument(fp)
+        obsdoc.metadata = yaml.safe_load(obsdoc.frontmatter_str)
 
         # If operation == INCLUDE...
         if args.operation in ['INCLUDE', 'include']:
-            if args.filterfield in metadata:
-                if type(metadata[args.filterfield]) is list:
-                    if filterfieldvalue in metadata[args.filterfield]:
-                        outputlist.append(fp)
-                elif type(metadata[args.filterfield]) in [str, bool, float, int]:
-                    if filterfieldvalue == metadata[args.filterfield]:
-                        outputlist.append(fp)
-                elif type(metadata[args.filterfield]) is dict:
-                    if filterfieldvalue == metadata[args.filterfield]:  # May want to consider special handling here
-                        outputlist.append(fp)
+            if args.filterfield in obsdoc.metadata:
+                if type(obsdoc.metadata[args.filterfield]) is list:
+                    if filterfieldvalue in obsdoc.metadata[args.filterfield]:
+                        outputlist.append(obsdoc)
+                elif type(obsdoc.metadata[args.filterfield]) in [str, bool, float, int]:
+                    if filterfieldvalue == obsdoc.metadata[args.filterfield]:
+                        outputlist.append(obsdoc)
+                elif type(obsdoc.metadata[args.filterfield]) is dict:
+                    if filterfieldvalue == obsdoc.metadata[args.filterfield]:  # May want to consider special handling here?
+                        outputlist.append(obsdoc)
                 else:
                     raise ValueError(f'Unknown datatype in {fp.strip(os.sep).split(os.sep)[-1]}, '
                                      f'field {args.filterfield}, '
-                                     f'value {metadata[args.filterfield]}, '
-                                     f'type {type(metadata[args.filterfield])}')
+                                     f'value {obsdoc.metadata[args.filterfield]}, '
+                                     f'type {type(obsdoc.metadata[args.filterfield])}')
             else:
                 logger.debug(f'Field {args.filterfield} not found in doc {fp}; not including in output')
                 continue
@@ -114,36 +113,36 @@ def main() -> int:
                     if filterfieldvalue in metadata[args.filterfield]:
                         continue
                     else:
-                        outputlist.append(fp)
-                elif type(metadata[args.filterfield]) in [str, bool, float, int]:
-                    if filterfieldvalue == metadata[args.filterfield]:
+                        outputlist.append(obsdoc)
+                elif type(obsdoc.metadata[args.filterfield]) in [str, bool, float, int]:
+                    if filterfieldvalue == obsdoc.metadata[args.filterfield]:
                         continue
                     else:
-                        outputlist.append(fp)
-                elif type(metadata[args.filterfield]) is dict:
-                    if filterfieldvalue == metadata[args.filterfield]:  # May want to consider special handling here
+                        outputlist.append(obsdoc)
+                elif type(obsdoc.metadata[args.filterfield]) is dict:
+                    if filterfieldvalue == obsdoc.metadata[args.filterfield]:  # May want to consider special handling here
                         continue
                 else:
                     raise ValueError(f'Unknown datatype in {fp.strip(os.sep).split(os.sep)[-1]}, '
                                      f'field {args.filterfield}, '
-                                     f'value {metadata[args.filterfield]}, '
-                                     f'type {type(metadata[args.filterfield])}')
+                                     f'value {obsdoc.metadata[args.filterfield]}, '
+                                     f'type {type(obsdoc.metadata[args.filterfield])}')
             else:
                 logger.debug(f'Field {args.filterfield} not found in doc {fp}; appending to output')
-                outputlist.append(fp)
+                outputlist.append(obsdoc)
 
     logger.debug(f'Filtered filelist now contains {len(outputlist)} items')
 
     # Do something (move, copy) with the files on the list
-    for fp in outputlist:
-        newfp = f'{args.outpath.strip(os.sep)}{os.sep}{fp.strip(os.sep).split(os.sep, 1)[-1]}'
+    for doc in outputlist:
+        newfp = f'{args.outpath.strip(os.sep)}{os.sep}{doc.filename.strip(os.sep).split(os.sep, 1)[-1]}'
         pathlib.Path(os.path.dirname(newfp)).mkdir(parents=True, exist_ok=True)  # create dir tree if needed
         if args.command in ['COPY', 'copy']:
-            logger.debug(f'Copying: {fp} -> {newfp}')
-            shutil.copy(fp, newfp)
+            logger.debug(f'Copying: {doc.filename} -> {newfp}')
+            shutil.copy(doc.filename, newfp)
         if args.command in ['MOVE', 'move']:
-            logger.debug(f'Moving: {fp} -> {newfp}')
-            shutil.move(fp, newfp)
+            logger.debug(f'Moving: {doc.filename} -> {newfp}')
+            shutil.move(doc.filename, newfp)
 
     return 0  # success
 

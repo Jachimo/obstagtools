@@ -34,16 +34,10 @@ def main() -> int:  # returns Unix exit value
         args.outpath = args.inpath
 
     obsdoc: obs_document.ObsDocument
-    obsdoc = obs_document.ObsDocument()  # see obs_document.py
-
-    logger.debug(f'Reading from {args.inpath}')
-    with open(args.inpath, 'r') as infile:
-        obsdoc.filename = args.inpath
-        obsdoc.lines = infile.readlines()
-        logger.debug(f'Read {len(obsdoc.lines)} lines')
+    obsdoc = obs_document.ObsDocument(args.inpath)  # see obs_document.py
 
     t: str
-    for t in args.tag:
+    for t in reversed(args.tag):
         obsdoc.add_tag(t)
 
     logger.debug(f'Writing to {args.outpath}')

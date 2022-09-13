@@ -38,7 +38,7 @@ def main() -> int:  # returns Unix exit value
     obsdoc = obs_document.ObsDocument(args.inpath)  # see obs_document.py
 
     # Retrieve YAML frontmatter portion of the Obsidian doc
-    metadata: dict = yaml.safe_load(obsdoc.get_frontmatter_str())
+    metadata: dict = yaml.safe_load(obsdoc.frontmatter_str)
     logger.debug(f'Frontmatter YAML parsed as:\n{metadata}')
 
     # Read YAML taxonomy file specifying metadata fields and default values
@@ -99,7 +99,7 @@ def main() -> int:  # returns Unix exit value
         logger.debug('Skipping indentation due to --noindent option')
 
     # Replace existing frontmatter in the ObsDocument
-    obsdoc.set_frontmatter(newfmlines)
+    obsdoc.frontmatter = newfmlines
 
     # Write out frontmatter+content (YAML+Markdown) to desired output path
     with open(args.outpath, 'w') as outf:

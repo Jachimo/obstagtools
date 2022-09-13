@@ -8,19 +8,98 @@ logger = logging.getLogger(__name__)
 
 
 class ObsDocument(object):
-    def __init__(self, filename: str):
+    def __init__(self, inputfilename: str):
         """Initialize an ObsDocument object
 
         Args:
-            filename: path to a valid Obsidian .md file
+            inputfilename: path to a valid Obsidian .md file
         """
-        self.filename: str = filename
+        logger.debug(f'Parsing: {inputfilename}')
+        self.filename = inputfilename
         with open(self.filename, 'r') as f:
             self.lines: List[str] = f.readlines()
         self._frontmatterstart: Optional[int] = None  # line index of first "---\n"
         self._frontmatterend: Optional[int] = None  # line index of second "---\n"
         self._tagline: Optional[int] = None  # line index of "tags:\n"
+        self.metadata = {}
         self.detect_frontmatter()
+
+    @property
+    def filename(self) -> str:
+        return self._filename
+
+    @filename.setter
+    def filename(self, fn: str) -> None:
+        self._filename = fn
+
+    @property
+    def frontmatter(self) -> List[str]:
+        """Get YAML frontmatter section as list of strings.
+
+        Returns:
+            A list of strings, one string per line with '\n' terminators
+            included, similar to the output of file.readlines().
+        """
+        return self.lines[self._frontmatterstart:self._frontmatterend]
+
+    @frontmatter.setter
+    def frontmatter(self, newfmlines: List[str]) -> None:
+        """Set the document's frontmatter.
+
+        Args:
+            newfmlines: A list of strings, containing the new frontmatter section.
+        """
+        if not self.validate():
+            raise ValueError(f'{self.filename} failed structure validation')
+        newlines: List[str] = newfmlines + self.lines[self._frontmatterend:]
+        self.lines = newlines
+        self.detect_frontmatter()
+
+    @property
+    def frontmatter_str(self) -> str:
+        """Retrieve the YAML frontmatter section as a string.
+
+        Returns:
+            A string, meant to match input requirements of yaml.safe_load().
+        """
+        return ''.join(self.frontmatter)
+
+    @property
+    def content(self) -> List[str]:
+        """Retrieve the Markdown-formatted content.
+
+        The 'content' is the rest of the document AFTER the end of the frontmatter,
+        i.e. the part that's formatted with Markdown and is usually supplied by
+        the user.
+
+        Returns:
+            A list of strings.
+        """
+        if not self.validate():
+            raise ValueError(f'{self.filename} failed structure validation')
+        return self.lines[self._frontmatterend:]
+
+    @content.setter
+    def content(self, newcontentlines: List[str]) -> None:
+        """Replace the document content.
+
+        Args:
+            newcontentlines: list of strings containing the new content.
+        """
+        if not self.validate():
+            raise ValueError(f'{self.filename} failed structure validation')
+        newlines: List[str] = self.lines[:self._frontmatterend] + newcontentlines
+        self.lines = newlines
+
+    @property
+    def metadata(self) -> dict:
+        return self._metadata
+
+    @metadata.setter
+    def metadata(self, newmd: dict) -> None:
+        if type(newmd) is not dict:
+            raise TypeError('Document metadata must be a dictionary.')
+        self._metadata = newmd
 
     def detect_frontmatter(self) -> None:
         """Try to detect beginning of frontmatter, end of frontmatter, and tags line
@@ -103,62 +182,6 @@ class ObsDocument(object):
             raise ValueError(f'{self.filename} failed structure validation')
         self.lines.insert(self._tagline + 1, '  - ' + tag.strip() + '\n')  # assumes (sequence=4, offset=1) indents?
 
-    def get_frontmatter(self) -> List[str]:
-        """Retrieve YAML frontmatter section as list of strings.
-
-        Returns:
-            A list of strings, one string per line with '\n' terminators
-            included, similar to the output of file.readlines().
-        """
-        if not self.validate():
-            raise ValueError(f'{self.filename} failed structure validation')
-        return self.lines[self._frontmatterstart:self._frontmatterend]
-
-    def get_frontmatter_str(self) -> str:
-        """Retrieve the YAML frontmatter section as a string.
-
-        Returns:
-            A string, meant to match input requirements of yaml.safe_load().
-        """
-        return ''.join(self.get_frontmatter())
-
-    def set_frontmatter(self, newfmlines: List[str]) -> None:
-        """Replace the document's frontmatter.
-
-        Args:
-            newfmlines: A list of strings, containing the new frontmatter section.
-        """
-        if not self.validate():
-            raise ValueError(f'{self.filename} failed structure validation')
-        newlines: List[str] = newfmlines + self.lines[self._frontmatterend:]
-        self.lines = newlines
-        self.detect_frontmatter()
-
-    def get_content(self) -> List[str]:
-        """Retrieve the Markdown-formatted content.
-
-        The 'content' is the rest of the document AFTER the end of the frontmatter,
-        i.e. the part that's formatted with Markdown and is usually supplied by
-        the user.
-
-        Returns:
-            A list of strings.
-        """
-        if not self.validate():
-            raise ValueError(f'{self.filename} failed structure validation')
-        return self.lines[self._frontmatterend:]
-
-    def set_content(self, newcontentlines: List[str]) -> None:
-        """Replace the document content.
-
-        Args:
-            newcontentlines: list of strings containing the new content.
-        """
-        if not self.validate():
-            raise ValueError(f'{self.filename} failed structure validation')
-        newlines: List[str] = self.lines[:self._frontmatterend] + newcontentlines
-        self.lines = newlines
-
     def wikify_terms(self,
                      termslist: list,
                      firstonly: bool = False,
@@ -175,7 +198,7 @@ class ObsDocument(object):
         """
         newcontent: List[str] = []
         line: str
-        for line in self.get_content():
+        for line in self.content:
             if skipheaders:
                 if line[0] == '#':
                     newcontent.append(line)
@@ -190,4 +213,4 @@ class ObsDocument(object):
                     else:
                         newline = newline.replace(term, '[[' + term + ']]')
             newcontent.append(newline)
-        self.set_content(newcontent)
+        self.content = newcontent

@@ -7,5 +7,6 @@ tags:
   - data/sample
   - programming/python
   - programming/yaml
+  - test/obs-add-taxonomy
 alias: ""
 publish: false
