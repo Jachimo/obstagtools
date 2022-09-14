@@ -7,6 +7,21 @@ from typing import Optional, List
 logger = logging.getLogger(__name__)
 
 
+# Utility functions
+def check_inner_type(iterable, tp) -> bool:
+    """Check inner types of a nested object, e.g. list of strings
+
+    Args:
+        iterable: iterable 'outer' object
+        tp: desired type of each 'inner' object
+
+    Returns:
+        True if all 'inner' objects are of type tp
+        False if any are not
+    """
+    return all(isinstance(i, tp) for i in iterable)
+
+
 class ObsDocument(object):
     def __init__(self, inputfilename: str):
         """Initialize an ObsDocument object
@@ -51,6 +66,8 @@ class ObsDocument(object):
         """
         if not self.validate():
             raise ValueError(f'{self.filename} failed structure validation')
+        if not check_inner_type(newfmlines, str):
+            raise TypeError(f'Frontmatter must be set to a list of strings')
         newlines: List[str] = newfmlines + self.lines[self._frontmatterend:]
         self.lines = newlines
         self.detect_frontmatter()
@@ -88,6 +105,8 @@ class ObsDocument(object):
         """
         if not self.validate():
             raise ValueError(f'{self.filename} failed structure validation')
+        if not check_inner_type(newcontentlines, str):
+            raise TypeError(f'Content must be set to a list of strings')
         newlines: List[str] = self.lines[:self._frontmatterend] + newcontentlines
         self.lines = newlines
 
