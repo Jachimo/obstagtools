@@ -44,9 +44,9 @@ def main() -> int:
 
     # Set up logging
     rootlogger = logging.getLogger()
-    logger = logging.getLogger(__name__)
     log_format: str = "[%(filename)20s,%(lineno)3s:%(funcName)20s] %(message)s"
     logging.basicConfig(format=log_format)
+    logger = logging.getLogger(__name__)
     if args.debug:
         rootlogger.setLevel(logging.DEBUG)
         logger.debug('Debug output enabled')
@@ -100,7 +100,7 @@ def main() -> int:
                     if filterfieldvalue == obsdoc.metadata[args.filterfield]:
                         outputlist.append(obsdoc)
                 elif type(obsdoc.metadata[args.filterfield]) is dict:
-                    if filterfieldvalue == obsdoc.metadata[args.filterfield]:  # May want to consider special handling here?
+                    if filterfieldvalue == obsdoc.metadata[args.filterfield]:  # Untested!
                         outputlist.append(obsdoc)
                 else:
                     raise ValueError(f'Unknown datatype in {fp.strip(os.sep).split(os.sep)[-1]}, '
@@ -125,7 +125,7 @@ def main() -> int:
                     else:
                         outputlist.append(obsdoc)
                 elif type(obsdoc.metadata[args.filterfield]) is dict:
-                    if filterfieldvalue == obsdoc.metadata[args.filterfield]:  # May want to consider special handling here
+                    if filterfieldvalue == obsdoc.metadata[args.filterfield]:  # Untested!
                         continue
                 else:
                     raise ValueError(f'Unknown datatype in {fp.strip(os.sep).split(os.sep)[-1]}, '

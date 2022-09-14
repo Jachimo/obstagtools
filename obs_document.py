@@ -24,7 +24,7 @@ def check_inner_type(iterable, tp) -> bool:
 
 class ObsDocument(object):
     def __init__(self, inputfilename: str):
-        """Initialize an ObsDocument object
+        """Initialize an Obsidian Document object
 
         Args:
             inputfilename: path to a valid Obsidian .md file
