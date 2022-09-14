@@ -35,6 +35,8 @@ def main() -> int:
     parser.add_argument('operation', type=str.upper, choices={'INCLUDE', 'EXCLUDE'},
                         help='Whether output must INCLUDE or EXCLUDE the specified field value from output set')
     parser.add_argument('fieldvalue', help='Field value (e.g. "personal")')
+    parser.add_argument('--attachments', '-a', action='store_true',
+                        help='Copy attachments (from ATTACHMENT_DIRS) linked by output document set')
     parser.add_argument('--force', action='store_true',
                         help='Perform operation even if outpath is not empty (WARNING: will clobber!)')
     parser.add_argument('--debug', action='store_true', help='Enable debug mode (verbose output)')
@@ -135,32 +137,23 @@ def main() -> int:
                 outputlist.append(obsdoc)
     logger.debug(f'Filtered filelist now contains {len(outputlist)} items')
 
-    # ATTACHMENTS HANDLING
-    #  TODO: move this into the ObsDocument class?
-
-    # Create list of *all* files in the Attachments directories
+    # Create a list of all internal links in all output docs
+    #  Note that this regex isn't perfect and is subject to false-positives, esp. w/ metacommentary about syntax
+    link_regexp_expr: str = r"\[\[(.{4,}?)(?:\||\]\])"  # See https://regex101.com/r/kEmr3g/2
+    link_regexp: re.Pattern = re.compile(link_regexp_expr, re.MULTILINE)
     attachmentfileslist: List[str] = []
-    for d in ATTACHMENT_DIRS:
-        for root, dirs, files in os.walk(args.inpath.strip(os.sep) + os.sep + d):
-            for f in files:
-                attachmentfileslist.append(f'{root}{os.sep}{f}')
-
-    print(f'attachmentfileslist is {attachmentfileslist}')  # TODO remove me
-
-    # Create a list of attachments related to each item in the output list
-    link_regexp_expr = r'\[\[.+?\]\]'
-    link_regexp = re.compile(link_regexp_expr)
-    relevantattachmentslist: List[str] = []
     for doc in outputlist:
         doclinks: List[str] = re.findall(link_regexp, ''.join(doc.lines))
-        print(f'doclinks: {doclinks}')
         for link in doclinks:
-            strippedlink = link.lstrip("[[").rstrip("]]")
-            print(f'link found: {strippedlink}')  # TODO remove me
-            if strippedlink in attachmentfileslist:  # TODO: needs to be a substring match or fix the abs path of link
-                relevantattachmentslist.append(strippedlink)
+            attachmentfileslist.append(link)
 
-    print(f'relevantattachmentslist is {relevantattachmentslist}')
+    # Cross-reference against list of all attachments and list the files that are linked
+    relevantattachmentslist: List[str] = []
+    for d in ATTACHMENT_DIRS:
+        for root, dirs, files in os.walk(f'{args.inpath.strip(os.sep)}{os.sep}{d}'):
+            for f in files:
+                if any(f == s for s in attachmentfileslist):
+                    relevantattachmentslist.append(f'{root}{os.sep}{f}')
 
     #  Create a new directory hierarchy and copy/move the files on the list into it
     for doc in outputlist:
@@ -172,6 +165,14 @@ def main() -> int:
         if args.command in ['MOVE', 'move']:
             logger.debug(f'Moving: {doc.filename} -> {newfp}')
             shutil.move(doc.filename, newfp)
+
+    # Copy the attachments in a similar way, if --attachments is selected
+    if args.attachments:
+        for f in relevantattachmentslist:
+            newfp = f'{args.outpath.strip(os.sep)}{os.sep}{f.strip(os.sep).split(os.sep, 1)[-1]}'
+            pathlib.Path(os.path.dirname(newfp)).mkdir(parents=True, exist_ok=True)  # creates Attachments dirs
+            logger.debug(f'Copying: {f} -> {newfp}')
+            shutil.copy(f, newfp)
 
     return 0  # success
 
