@@ -19,11 +19,14 @@ Here we're just exercising the Markdown functionality...
 - Top Level List
   - Second Level List
   - Second Level List (continued)
-  - Second Level List (even more)
+  - Attachment in a list: [[foo.txt]]
 - Top Level List Part Deux
 - Top Level List: The Return of the List
 
 Are you sure that `2 + 2 = 4`?
+
+Embedded image:  
+![[bar.png]]
 
 > You may go into the fields or down the lane, but don’t go into
 > Mr. McGregor’s garden. Your Father had an accident there; he was put

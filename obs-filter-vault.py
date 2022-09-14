@@ -11,6 +11,7 @@ import logging
 import os
 from typing import List, Any
 import oyaml as yaml
+import re
 import pathlib
 import shutil
 
@@ -134,7 +135,34 @@ def main() -> int:
                 outputlist.append(obsdoc)
     logger.debug(f'Filtered filelist now contains {len(outputlist)} items')
 
-    # Create a new directory hierarchy and copy/move the files on the list into it
+    # ATTACHMENTS HANDLING
+    #  TODO: move this into the ObsDocument class?
+
+    # Create list of *all* files in the Attachments directories
+    attachmentfileslist: List[str] = []
+    for d in ATTACHMENT_DIRS:
+        for root, dirs, files in os.walk(args.inpath.strip(os.sep) + os.sep + d):
+            for f in files:
+                attachmentfileslist.append(f'{root}{os.sep}{f}')
+
+    print(f'attachmentfileslist is {attachmentfileslist}')  # TODO remove me
+
+    # Create a list of attachments related to each item in the output list
+    link_regexp_expr = r'\[\[.+?\]\]'
+    link_regexp = re.compile(link_regexp_expr)
+    relevantattachmentslist: List[str] = []
+    for doc in outputlist:
+        doclinks: List[str] = re.findall(link_regexp, ''.join(doc.lines))
+        print(f'doclinks: {doclinks}')
+        for link in doclinks:
+            strippedlink = link.lstrip("[[").rstrip("]]")
+            print(f'link found: {strippedlink}')  # TODO remove me
+            if strippedlink in attachmentfileslist:  # TODO: needs to be a substring match or fix the abs path of link
+                relevantattachmentslist.append(strippedlink)
+
+    print(f'relevantattachmentslist is {relevantattachmentslist}')
+
+    #  Create a new directory hierarchy and copy/move the files on the list into it
     for doc in outputlist:
         newfp = f'{args.outpath.strip(os.sep)}{os.sep}{doc.filename.strip(os.sep).split(os.sep, 1)[-1]}'
         pathlib.Path(os.path.dirname(newfp)).mkdir(parents=True, exist_ok=True)  # create dir tree if needed
