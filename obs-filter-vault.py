@@ -11,7 +11,6 @@ import logging
 import os
 from typing import List, Any
 import oyaml as yaml
-import re
 import pathlib
 import shutil
 
@@ -53,28 +52,16 @@ def main() -> int:
     else:
         rootlogger.setLevel(logging.INFO)
 
+    vault: obs_document.ObsVault
+    vault = obs_document.ObsVault(args.inpath)
+
     # Input sanity checks
-    if not os.path.isdir(args.inpath):
-        logger.info('Input path must refer to a directory.')
-        return 1
     if os.path.isdir(args.outpath):
         if len(os.listdir(args.outpath)) != 0:
             if not args.force:
                 logger.warning(f'Destination directory {args.outpath} is not empty '
                                'and --force not specified; aborting.')
                 return 1
-
-    # Build list of files to filter, based on extension
-    filelist: List[str] = []
-    for root, dirs, files in os.walk(args.inpath):
-        for f in files:
-            if any(s in root for s in SKIP_DIRS):  # don't add files from SKIP_DIRS
-                continue
-            elif any(s in root for s in ATTACHMENT_DIRS):  # or ATTACHMENT_DIRS
-                continue
-            elif f.split('.')[-1] in ALLOWED_FILE_EXTENSIONS:
-                filelist.append(f'{root}{os.sep}{f}')
-    logger.debug(f'Unfiltered filelist contains {len(filelist)}')
 
     # Convert the user-supplied string to the proper datatype
     filterfieldvalue: Any = yaml.safe_load(args.fieldvalue)
@@ -85,7 +72,7 @@ def main() -> int:
 
     # Inspect each file and create outputlist as appropriate
     outputlist: List[obs_document.ObsDocument] = []
-    for fp in filelist:
+    for fp in vault.doclist:
         obsdoc: obs_document.ObsDocument
         obsdoc = obs_document.ObsDocument(fp)
         obsdoc.metadata = yaml.safe_load(obsdoc.frontmatter_str)
@@ -138,26 +125,19 @@ def main() -> int:
     logger.debug(f'Filtered filelist now contains {len(outputlist)} items')
 
     # Create a list of all internal links in all output docs
-    #  Note that this regex isn't perfect and is subject to false-positives, esp. w/ metacommentary about syntax
-    link_regexp_expr: str = r"\[\[(.{4,}?)(?:\||\]\])"  # See https://regex101.com/r/kEmr3g/2
-    link_regexp: re.Pattern = re.compile(link_regexp_expr, re.MULTILINE)
-    attachmentfileslist: List[str] = []
+    all_links: List[str] = []
     for doc in outputlist:
-        doclinks: List[str] = re.findall(link_regexp, ''.join(doc.lines))
-        for link in doclinks:
-            attachmentfileslist.append(link)
+        all_links.extend(doc.internal_links)
 
     # Cross-reference against list of all attachments and list the files that are linked
-    relevantattachmentslist: List[str] = []
-    for d in ATTACHMENT_DIRS:
-        for root, dirs, files in os.walk(f'{args.inpath.strip(os.sep)}{os.sep}{d}'):
-            for f in files:
-                if any(f == s for s in attachmentfileslist):
-                    relevantattachmentslist.append(f'{root}{os.sep}{f}')
+    relevant_attachments: List[str] = []
+    for f in vault.allattachments:
+        if any(os.path.basename(f) == s for s in all_links):
+            relevant_attachments.append(f)
 
     #  Create a new directory hierarchy and copy/move the files on the list into it
     for doc in outputlist:
-        newfp = f'{args.outpath.strip(os.sep)}{os.sep}{doc.filename.strip(os.sep).split(os.sep, 1)[-1]}'
+        newfp = f'{args.outpath.strip(os.sep)}{os.sep}{doc.filename.strip(os.sep).split(os.sep, 1)[-1]}'  # FIXME: pretty sure this breaks on abs paths?
         pathlib.Path(os.path.dirname(newfp)).mkdir(parents=True, exist_ok=True)  # create dir tree if needed
         if args.command in ['COPY', 'copy']:
             logger.debug(f'Copying: {doc.filename} -> {newfp}')
@@ -168,8 +148,8 @@ def main() -> int:
 
     # Copy the attachments in a similar way, if --attachments is selected
     if args.attachments:
-        for f in relevantattachmentslist:
-            newfp = f'{args.outpath.strip(os.sep)}{os.sep}{f.strip(os.sep).split(os.sep, 1)[-1]}'
+        for f in relevant_attachments:
+            newfp = f'{args.outpath.strip(os.sep)}{os.sep}{f.strip(os.sep).split(os.sep, 1)[-1]}'  # FIXME: pretty sure this breaks on abs paths?
             pathlib.Path(os.path.dirname(newfp)).mkdir(parents=True, exist_ok=True)  # creates Attachments dirs
             logger.debug(f'Copying: {f} -> {newfp}')
             shutil.copy(f, newfp)
