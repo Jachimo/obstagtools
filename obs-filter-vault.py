@@ -137,7 +137,7 @@ def main() -> int:
 
     #  Create a new directory hierarchy and copy/move the files on the list into it
     for doc in outputlist:
-        newfp = f'{args.outpath.strip(os.sep)}{os.sep}{doc.filename.strip(os.sep).split(os.sep, 1)[-1]}'  # FIXME: pretty sure this breaks on abs paths?
+        newfp = doc.filename.replace(vault.root, args.outpath.rstrip(os.path.sep))
         pathlib.Path(os.path.dirname(newfp)).mkdir(parents=True, exist_ok=True)  # create dir tree if needed
         if args.command in ['COPY', 'copy']:
             logger.debug(f'Copying: {doc.filename} -> {newfp}')
@@ -149,7 +149,7 @@ def main() -> int:
     # Copy the attachments in a similar way, if --attachments is selected
     if args.attachments:
         for f in relevant_attachments:
-            newfp = f'{args.outpath.strip(os.sep)}{os.sep}{f.strip(os.sep).split(os.sep, 1)[-1]}'  # FIXME: pretty sure this breaks on abs paths?
+            newfp = f.replace(vault.root, args.outpath.rstrip(os.path.sep))
             pathlib.Path(os.path.dirname(newfp)).mkdir(parents=True, exist_ok=True)  # creates Attachments dirs
             logger.debug(f'Copying: {f} -> {newfp}')
             shutil.copy(f, newfp)
