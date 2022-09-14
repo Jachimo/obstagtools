@@ -1,6 +1,8 @@
-# obstagtools
+# Obsidian Tag & Metadata Tools (`obstagtools`)
 
-Some tools for working with Obsidian-flavor (YAML frontmatter + Markdown content) notes files.
+Some tools for working with [Obsidian][]-flavor (YAML frontmatter + Markdown content) notes files.
+
+[Obsidian]: https://obsidian.md/
 
 ## obs-add-tag.py
 
@@ -68,7 +70,9 @@ metadata field:value.
 ### Usage
 
 ```Text
-usage: obs-filter-vault.py [-h] [--force] [--debug] inpath outpath {COPY,MOVE} filterfield {EXCLUDE,INCLUDE} fieldvalue
+usage: obs-filter-vault.py [-h] [--attachments] [--force] [--debug]
+                           inpath outpath {COPY,MOVE} filterfield
+                           {EXCLUDE,INCLUDE} fieldvalue
 
 Filter an Obsidian vault based on document metadata
 
@@ -77,12 +81,16 @@ positional arguments:
   outpath            Destination path (must be empty unless --force is used)
   {COPY,MOVE}        Command to execute
   filterfield        Metadata field to filter by (e.g. "tags")
-  {EXCLUDE,INCLUDE}  Whether output must INCLUDE or EXCLUDE the specified field value from output set
+  {EXCLUDE,INCLUDE}  Whether output must INCLUDE or EXCLUDE the specified
+                     field value from output set
   fieldvalue         Field value (e.g. "personal")
 
 optional arguments:
   -h, --help         show this help message and exit
-  --force            Perform operation even if outpath is not empty (WARNING: will clobber!)
+  --attachments, -a  Copy attachments (from ATTACHMENT_DIRS) linked by output
+                     document set
+  --force            Perform operation even if outpath is not empty (WARNING:
+                     will clobber!)
   --debug            Enable debug mode (verbose output)
 ```
 
@@ -90,26 +98,29 @@ optional arguments:
 
 #### Create Vault Without Personal Files
 
-**Scenario:** I have a Obsidian Vault full of work notes, `Worknotes.obs/` that I would
+**Scenario:** I have a Obsidian Vault full of work notes, `Worknotes/` that I would
 like to pass along to a colleague, _except for_ the notes that are specifically tagged as 'personal' 
 (i.e. they have a YAML frontmatter field named `tags` which contains the value `personal`).
 
 ```shell
-$ obs-filter-vault.py Worknotes.obs Worknotes-filtered.obs COPY tags EXCLUDE personal
+$ obs-filter-vault.py Worknotes/ Worknotes-filtered/ COPY tags EXCLUDE personal --attachments
 ```
 
-This command reads recursively from `Worknotes.obs`, writes to `Worknotes-filtered.obs`,
+This command reads recursively from `Worknotes/`, writes to `Worknotes-filtered/`,
 and will `COPY` notes _except_ if they have a metadata field `tags` with a value `personal`, in which case they
 will be **excluded** (due to the `EXCLUDE` option) from the copy.
+Because of the `--attachments` option, it will also copy those files located in specified Attachments directories
+(default: `Attachments/`, inside the input vault)
+which have links to them from documents in the output set.
 
 #### Extract Personal Files From Vault
 
-**Scenario:** Similar to the above, I have a `Worknotes.obs` vault containing some notes tagged 'personal'.
+**Scenario:** Similar to the above, I have a `Worknotes/` vault containing some notes tagged 'personal'.
 But this time, I'd like to _move_ those personal notes out of Worknotes and into a new directory tree, rooted
 at `Personal.obs` (which must either not exist, or be empty, unless `--force` is selected).
 
 ```shell
-$ obs-filter-vault.py Worknotes.obs Personal.obs MOVE tags INCLUDE personal
+$ obs-filter-vault.py Worknotes/ Personal/ MOVE tags INCLUDE personal
 ```
 
 This command `MOVE`s notes meeting the criteria (`tags INCLUDE personal`), so any note tagged as 'personal'
