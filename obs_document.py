@@ -1,15 +1,80 @@
-# Class for working with Obsidian-flavor Markdown+YAML documents
+# Classes for working with Obsidian-flavor Markdown+YAML documents
 
 import logging
+import os
+import re
 from typing import Optional, List
 
-# Set up logging
+# CONSTANTS
+LINK_REGEXP: re.Pattern = re.compile(r'\[\[(.{4,}?)(?:\||\]\])', re.MULTILINE)  # See https://regex101.com/r/kEmr3g/2
+# Both SKIP_DIRS and ATTACHMENT_DIRS are excluded from the search for Obsidian notes files
+SKIP_DIRS: List[str] = ['Templates', '.obsidian']
+ATTACHMENT_DIRS: List[str] = ['Attachments']
+# Only files with one of the ALLOWED_FILE_EXTENSIONS are considered possible Obsidian notes
+ALLOWED_FILE_EXTENSIONS: List[str] = ['md', 'markdown', 'mdown', 'mkdn', 'obs']
+
+# LOGGING
 logger = logging.getLogger(__name__)
+
+
+# Utility functions
+def check_inner_type(iterable, tp) -> bool:
+    """Check inner types of a nested object, e.g. list of strings
+
+    Args:
+        iterable: iterable 'outer' object
+        tp: desired type of each 'inner' object
+
+    Returns:
+        True if all 'inner' objects are of type tp
+        False if any are not
+    """
+    return all(isinstance(i, tp) for i in iterable)
+
+
+class ObsVault(object):
+    def __init__(self, path: str):
+        self.root = path
+
+    @property
+    def root(self) -> str:
+        return self._rootpath
+
+    @root.setter
+    def root(self, path: str) -> None:
+        strippedpath = path.rstrip(os.sep)
+        if not os.path.isdir(strippedpath):
+            raise ValueError(f'Vault root must be a directory; "{strippedpath}" does not appear to be.')
+        self._rootpath = strippedpath
+
+    @property
+    def doclist(self) -> List[str]:
+        docs: List[str] = []
+        for root, dirs, files in os.walk(self.root):
+            for f in files:
+                if any(s in root for s in SKIP_DIRS):  # don't add files from SKIP_DIRS
+                    continue
+                elif any(s in root for s in ATTACHMENT_DIRS):  # or ATTACHMENT_DIRS
+                    continue
+                elif f.split('.')[-1] in ALLOWED_FILE_EXTENSIONS:
+                    docs.append(f'{root}{os.sep}{f}')
+        logger.debug(f'Vault {os.path.basename(self.root)} contains {len(docs)} docs')
+        return docs
+
+    @property
+    def allattachments(self) -> List[str]:
+        aps: List[str] = []
+        for d in ATTACHMENT_DIRS:
+            for root, subdirs, files in os.walk(f'{self.root.rstrip(os.sep)}{os.sep}{d}'):
+                for f in files:
+                    aps.append(f'{root}{os.sep}{f}')
+        logger.debug(f'Vault {os.path.basename(self.root)} contains {len(aps)} attachments')
+        return aps
 
 
 class ObsDocument(object):
     def __init__(self, inputfilename: str):
-        """Initialize an ObsDocument object
+        """Initialize an Obsidian Document object
 
         Args:
             inputfilename: path to a valid Obsidian .md file
@@ -51,6 +116,8 @@ class ObsDocument(object):
         """
         if not self.validate():
             raise ValueError(f'{self.filename} failed structure validation')
+        if not check_inner_type(newfmlines, str):
+            raise TypeError(f'Frontmatter must be set to a list of strings')
         newlines: List[str] = newfmlines + self.lines[self._frontmatterend:]
         self.lines = newlines
         self.detect_frontmatter()
@@ -88,6 +155,8 @@ class ObsDocument(object):
         """
         if not self.validate():
             raise ValueError(f'{self.filename} failed structure validation')
+        if not check_inner_type(newcontentlines, str):
+            raise TypeError(f'Content must be set to a list of strings')
         newlines: List[str] = self.lines[:self._frontmatterend] + newcontentlines
         self.lines = newlines
 
@@ -100,6 +169,22 @@ class ObsDocument(object):
         if type(newmd) is not dict:
             raise TypeError('Document metadata must be a dictionary.')
         self._metadata = newmd
+
+    @property
+    def internal_links(self) -> List[str]:
+        """Get a list of [[internal link]] targets extracted from the document.
+
+        Internal links are only those enclosed in double brackets,
+        and targets are extracted using a regular expression (LINK_REGEXP) which
+        very likely errs on the side of false-positives.
+
+        If a link contains an optional component delimited with a pipe character,
+        such as [[my_image.jpg|500]], only "my_image.jpg" is extracted.
+
+        Returns:
+            List of strings from inside [[double bracketed]] links.
+        """
+        return re.findall(LINK_REGEXP, ''.join(self.lines))
 
     def detect_frontmatter(self) -> None:
         """Try to detect beginning of frontmatter, end of frontmatter, and tags line

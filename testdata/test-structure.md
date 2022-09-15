@@ -19,12 +19,24 @@ Here we're just exercising the Markdown functionality...
 - Top Level List
   - Second Level List
   - Second Level List (continued)
-  - Second Level List (even more)
-- Top Level List Part Deux
-- Top Level List: The Return of the List
+  - Attachment in a list: [[foo.txt]]
+- [[Top Level List Part Deux]]
+- Top Level List: [[The Return of the List]] (another internal wiki-link)
+- [An external link](https://www.google.com) with inline notation
+- [And another external link][re] with footnote-style notation
+  - But not an actual footnote[^1]
+
+[re]: https://regex101.com/
 
 Are you sure that `2 + 2 = 4`?
+
+Embedded image (with width set):  
+![[bar.png|250]]
+
+**A Wise Quotation:**  
 
 > You may go into the fields or down the lane, but don’t go into
 > Mr. McGregor’s garden. Your Father had an accident there; he was put
 > in a pie by Mrs. McGregor.
+
+[^1]: They're written like this.

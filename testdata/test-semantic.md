@@ -8,6 +8,8 @@ name: "Semantic Test Document"
 ---
 # Obsidian Keyword Test Document
 
+Without wikification, this document contains a single [[wiki]] type link.
+
 ## 26-bit Addressing
 
 In computer architecture, 26-bit integers, memory addresses, or other data units are those that are 26 bits wide, and
