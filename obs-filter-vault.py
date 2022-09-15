@@ -52,6 +52,7 @@ def main() -> int:
     else:
         rootlogger.setLevel(logging.INFO)
 
+    # Create Vault object
     vault: obs_document.ObsVault
     vault = obs_document.ObsVault(args.inpath)
 

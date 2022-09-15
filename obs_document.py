@@ -1,14 +1,20 @@
 # Classes for working with Obsidian-flavor Markdown+YAML documents
+# Part of 'Obsidian Tag Tools': https://github.com/Jachimo/obstagtools
+# Requires Python 3.5+, tested using Python 3.9
 
 import logging
 import os
 import re
 from typing import Optional, List
 
-# CONSTANTS
+import obs_document
+
+# CONSTANTS  # TODO: Move to config file
+# Regular expression to use for detecting [[internal links]] within Obsidian docs
 LINK_REGEXP: re.Pattern = re.compile(r'\[\[(.{4,}?)(?:\||\]\])', re.MULTILINE)  # See https://regex101.com/r/kEmr3g/2
 # Both SKIP_DIRS and ATTACHMENT_DIRS are excluded from the search for Obsidian notes files
 SKIP_DIRS: List[str] = ['Templates', '.obsidian']
+# Default attachment dir(s), relative to vault root
 ATTACHMENT_DIRS: List[str] = ['Attachments']
 # Only files with one of the ALLOWED_FILE_EXTENSIONS are considered possible Obsidian notes
 ALLOWED_FILE_EXTENSIONS: List[str] = ['md', 'markdown', 'mdown', 'mkdn', 'obs']
@@ -32,9 +38,10 @@ def check_inner_type(iterable, tp) -> bool:
     return all(isinstance(i, tp) for i in iterable)
 
 
-class ObsVault(object):
+class ObsVault(object):  # TODO: move into separate file
     def __init__(self, path: str):
         self.root = path
+        self.attachmentdirs = ATTACHMENT_DIRS
 
     @property
     def root(self) -> str:
@@ -49,7 +56,7 @@ class ObsVault(object):
 
     @property
     def doclist(self) -> List[str]:
-        docs: List[str] = []
+        docs: Optional[List[str]] = []
         for root, dirs, files in os.walk(self.root):
             for f in files:
                 if any(s in root for s in SKIP_DIRS):  # don't add files from SKIP_DIRS
@@ -62,8 +69,30 @@ class ObsVault(object):
         return docs
 
     @property
+    def docs(self) -> list:  # when in sep file, List[ObsDocument]
+        dl = []
+        for d in self.doclist:
+            dl.append(ObsDocument(d))
+        return dl
+
+    @property
+    def attachmentdirs(self) -> List[str]:
+        return self._attachmentdirs
+
+    @attachmentdirs.setter
+    def attachmentdirs(self, paths: List[str]) -> None:
+        apaths: Optional[List[str]] = []
+        for p in paths:
+            apath = self.root + os.sep + p.rstrip(os.sep)
+            if not os.path.isdir(apath):
+                raise ValueError(f'Specified attachment directory "{apath}" not found or not a directory.')
+            else:
+                apaths.append(apath)
+        self._attachmentdirs = apaths
+
+    @property
     def allattachments(self) -> List[str]:
-        aps: List[str] = []
+        aps: Optional[List[str]] = []
         for d in ATTACHMENT_DIRS:
             for root, subdirs, files in os.walk(f'{self.root.rstrip(os.sep)}{os.sep}{d}'):
                 for f in files:
