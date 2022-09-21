@@ -1,6 +1,6 @@
 # Obsidian Tag & Metadata Tools (`obstagtools`)
 
-Some tools for working with [Obsidian][]-flavor (YAML frontmatter + Markdown content) notes files.
+Some tools for working with [Obsidian.md][Obsidian]-flavor (YAML frontmatter + Markdown content) notes files.
 
 **This should be considered 'developer-grade' software, and almost certainly has bugs.**
 Problem reports and pull requests welcome.

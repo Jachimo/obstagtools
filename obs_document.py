@@ -32,7 +32,7 @@ class ObsDocument(object):
         """Initialize an Obsidian Document object
 
         Args:
-            inputfilename: path to a valid Obsidian .md file
+            inputfilename (str): path to a valid Obsidian .md file
         """
         logger.debug(f'Parsing: {inputfilename}')
         self.filename: str = inputfilename
