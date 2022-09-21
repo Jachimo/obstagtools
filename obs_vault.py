@@ -43,7 +43,7 @@ class ObsVault(object):
             for f in files:
                 if any(s in root for s in config.SKIP_DIRS):  # don't add files from SKIP_DIRS
                     continue
-                elif any(s in root for s in config.ATTACHMENT_DIRS):  # or ATTACHMENT_DIRS
+                elif any(s in root for s in self.attachmentdirs):  # or ATTACHMENT_DIRS
                     continue
                 elif f.split('.')[-1] in config.ALLOWED_FILE_EXTENSIONS:
                     docs.append(f'{root}{os.sep}{f}')
@@ -82,11 +82,11 @@ class ObsVault(object):
 
     @property
     def allattachments(self) -> Optional[List[str]]:
-        if not config.ATTACHMENT_DIRS:
-            logger.debug(f'config.ATTACHMENT_DIRS not specified for {self.root}')
+        if not self.attachmentdirs:
+            logger.debug(f'attachmentdirs for {self.root} is None')
             return None
         attach_list: list = []
-        for d in config.ATTACHMENT_DIRS:
+        for d in self.attachmentdirs:
             for root, subdirs, files in os.walk(f'{self.root.rstrip(os.sep)}{os.sep}{d}'):
                 for f in files:
                     attach_list.append(f'{root}{os.sep}{f}')
