@@ -6,25 +6,10 @@ import re
 from typing import Optional, List
 
 import obs_config as config
-
+from obs_utilities import check_inner_type
 
 # LOGGING
 logger = logging.getLogger(__name__)
-
-
-# Utility functions
-def check_inner_type(iterable, tp) -> bool:
-    """Check inner types of a nested object, e.g. list of strings
-
-    Args:
-        iterable: iterable 'outer' object
-        tp: desired type of each 'inner' object
-
-    Returns:
-        True if all 'inner' objects are of type tp
-        False if any are not
-    """
-    return all(isinstance(i, tp) for i in iterable)
 
 
 class ObsDocument(object):
@@ -32,10 +17,11 @@ class ObsDocument(object):
         """Initialize an Obsidian Document object
 
         Args:
-            inputfilename: path to a valid Obsidian .md file
+            inputfilename (str): path to a valid Obsidian .md file
         """
         logger.debug(f'Parsing: {inputfilename}')
-        self.filename = inputfilename
+        self.filename: str = inputfilename
+
         with open(self.filename, 'r') as f:
             self.lines: List[str] = f.readlines()
         self._frontmatterstart: Optional[int] = None  # line index of first "---\n"
@@ -50,6 +36,8 @@ class ObsDocument(object):
 
     @filename.setter
     def filename(self, fn: str) -> None:
+        if not fn:
+            raise ValueError(f'Filename must have a non-False string value.')
         self._filename = fn
 
     @property
@@ -220,7 +208,8 @@ class ObsDocument(object):
         """
         if not self.validate():
             raise ValueError(f'{self.filename} failed structure validation')
-        self.lines.insert(self._tagline + 1, '  - ' + tag.strip() + '\n')  # assumes (sequence=4, offset=1) indents?
+        assert self._tagline is not None
+        self.lines.insert(self._tagline + 1, '  - ' + tag.strip() + '\n')  #
 
     def wikify_terms(self,
                      termslist: list,

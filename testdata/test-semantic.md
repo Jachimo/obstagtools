@@ -4,11 +4,13 @@ testvalue: True
 tags:
   - testfile
 alias: "Obsidian Keyword Test"
+source: Wikipedia
 name: "Semantic Test Document"
 ---
 # Obsidian Keyword Test Document
 
 Without wikification, this document contains a single [[wiki]] type link.
+It does not have any linked attachments.
 
 ## 26-bit Addressing
 
