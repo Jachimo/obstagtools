@@ -9,7 +9,7 @@ import sys
 import argparse
 import logging
 import os
-from typing import List, Any
+from typing import List, Any, Optional
 import oyaml as yaml
 import pathlib
 import shutil
@@ -120,15 +120,21 @@ def main() -> int:
     logger.debug(f'Filtered filelist now contains {len(outputlist)} items')
 
     # Create a list of all internal links in all output docs
-    all_links: List[str] = []
+    all_doc_links: List[str] = []
     for doc in outputlist:
-        all_links.extend(doc.internal_links)
+        all_doc_links.extend(doc.internal_links)
 
     # Cross-reference against list of all attachments and list the files that are linked
-    relevant_attachments: List[str] = []
-    for f in vault.allattachments:
-        if any(os.path.basename(f) == s for s in all_links):
-            relevant_attachments.append(f)
+    relevant_attachments: Optional[List[str]]
+    if not vault.allattachments:
+        logger.info(f'Vault "{vault.root}" does not appear to have any attachments (vault.allattachments is None).')
+        relevant_attachments = None
+    else:
+        relevant_attachments = []
+        f: str
+        for f in vault.allattachments:
+            if any(os.path.basename(f) == s for s in all_doc_links):
+                relevant_attachments.append(f)
 
     #  Create a new directory hierarchy and copy/move the files on the list into it
     for doc in outputlist:
@@ -142,7 +148,8 @@ def main() -> int:
             shutil.move(doc.filename, newfp)
 
     # Copy the attachments in a similar way, if --attachments is selected
-    if args.attachments:
+    if args.attachments and relevant_attachments:
+        assert relevant_attachments is not None
         for f in relevant_attachments:
             newfp = f.replace(vault.root, args.outpath.rstrip(os.path.sep))
             pathlib.Path(os.path.dirname(newfp)).mkdir(parents=True, exist_ok=True)  # creates Attachments dirs

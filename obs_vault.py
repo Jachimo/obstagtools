@@ -31,7 +31,10 @@ class ObsVault(object):
 
     @property
     def doclist(self) -> List[str]:
-        docs: Optional[List[str]] = []
+        docs: List[str] = []
+        root: str
+        dirs: List[str]
+        files: List[str]
         for root, dirs, files in os.walk(self.root):
             for f in files:
                 if any(s in root for s in config.SKIP_DIRS):  # don't add files from SKIP_DIRS
@@ -44,33 +47,44 @@ class ObsVault(object):
         return docs
 
     @property
-    def docs(self) -> list:  # when in sep file, List[ObsDocument]
-        dl = []
+    def docs(self) -> List[obs_document.ObsDocument]:
+        dl: list = []
         for d in self.doclist:
             dl.append(obs_document.ObsDocument(d))
         return dl
 
     @property
-    def attachmentdirs(self) -> List[str]:
+    def attachmentdirs(self) -> Optional[List[str]]:
         return self._attachmentdirs
 
     @attachmentdirs.setter
-    def attachmentdirs(self, paths: List[str]) -> None:
-        apaths: Optional[List[str]] = []
+    def attachmentdirs(self, paths: Optional[List[str]]) -> None:
+        if not paths:  # attachmentdirs SHOULD be able to be None under some circumstances (not required)
+            logger.debug(f'Setting attachment directories for {self.root} to None; this may cause problems.')
+            self._attachmentdirs = None
+            return None
+        assert paths is not None
+
+        extpaths: List[str] = []
+        p: str
         for p in paths:
-            apath = self.root + os.sep + p.rstrip(os.sep)
-            if not os.path.isdir(apath):
-                raise ValueError(f'Specified attachment directory "{apath}" not found or not a directory.')
+            rootedpath: str = self.root + os.sep + p.rstrip(os.sep)  # self.root has already been .rstripped
+            if not os.path.isdir(rootedpath):
+                raise ValueError(f'Specified attachment directory "{rootedpath}" not found or not a directory.')
             else:
-                apaths.append(apath)
-        self._attachmentdirs = apaths
+                extpaths.append(rootedpath)
+        self._attachmentdirs = extpaths
+        assert self._attachmentdirs is not None
 
     @property
-    def allattachments(self) -> List[str]:
-        aps: Optional[List[str]] = []
+    def allattachments(self) -> Optional[List[str]]:
+        if not config.ATTACHMENT_DIRS:
+            logger.debug(f'config.ATTACHMENT_DIRS not specified for {self.root}')
+            return None
+        attach_list: list = []
         for d in config.ATTACHMENT_DIRS:
             for root, subdirs, files in os.walk(f'{self.root.rstrip(os.sep)}{os.sep}{d}'):
                 for f in files:
-                    aps.append(f'{root}{os.sep}{f}')
-        logger.debug(f'Vault {os.path.basename(self.root)} contains {len(aps)} attachments')
-        return aps
+                    attach_list.append(f'{root}{os.sep}{f}')
+        logger.debug(f'Vault {os.path.basename(self.root)} contains {len(attach_list)} attachments')
+        return attach_list

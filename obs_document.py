@@ -3,7 +3,7 @@
 
 import logging
 import re
-from typing import Optional, List
+from typing import Optional, List, Iterable, Type
 
 import obs_config as config
 
@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 # Utility functions
-def check_inner_type(iterable, tp) -> bool:
+def check_inner_type(iterable: Iterable, tp: Type) -> bool:
     """Check inner types of a nested object, e.g. list of strings
 
     Args:
@@ -35,7 +35,8 @@ class ObsDocument(object):
             inputfilename: path to a valid Obsidian .md file
         """
         logger.debug(f'Parsing: {inputfilename}')
-        self.filename = inputfilename
+        self.filename: str = inputfilename
+
         with open(self.filename, 'r') as f:
             self.lines: List[str] = f.readlines()
         self._frontmatterstart: Optional[int] = None  # line index of first "---\n"
@@ -50,6 +51,8 @@ class ObsDocument(object):
 
     @filename.setter
     def filename(self, fn: str) -> None:
+        if not fn:
+            raise ValueError(f'Filename must have a non-False string value.')
         self._filename = fn
 
     @property
@@ -220,7 +223,8 @@ class ObsDocument(object):
         """
         if not self.validate():
             raise ValueError(f'{self.filename} failed structure validation')
-        self.lines.insert(self._tagline + 1, '  - ' + tag.strip() + '\n')  # assumes (sequence=4, offset=1) indents?
+        assert self._tagline is not None
+        self.lines.insert(self._tagline + 1, '  - ' + tag.strip() + '\n')  #
 
     def wikify_terms(self,
                      termslist: list,
