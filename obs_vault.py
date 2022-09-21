@@ -67,7 +67,8 @@ class ObsVault(object):
             logger.debug(f'Setting attachment directories for {self.root} to None; this may cause problems.')
             self._attachmentdirs = None
             return None
-        assert paths is not None
+        else:
+            assert paths is not None
 
         extpaths: List[str] = []
         p: str
