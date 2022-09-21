@@ -2,6 +2,9 @@
 
 Some tools for working with [Obsidian][]-flavor (YAML frontmatter + Markdown content) notes files.
 
+**This should be considered 'developer-grade' software, and almost certainly has bugs.**
+Problem reports and pull requests welcome.
+
 [Obsidian]: https://obsidian.md/
 
 ## obs-add-tag.py
