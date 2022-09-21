@@ -24,6 +24,10 @@ class ObsVault(object):
 
     @root.setter
     def root(self, path: str) -> None:
+        if not path:
+            raise ValueError(f'Vault root cannot be null/None')
+        if not isinstance(path, str):
+            raise TypeError(f'Vault path must be a string, "{path}" (type {type(path)}) passed')
         strippedpath = path.rstrip(os.sep)
         if not os.path.isdir(strippedpath):
             raise ValueError(f'Vault root must be a directory; "{strippedpath}" does not appear to be.')
