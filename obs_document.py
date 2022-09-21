@@ -1,4 +1,3 @@
-# Classes for working with Obsidian-flavor Markdown+YAML documents
 # Part of 'Obsidian Tag Tools': https://github.com/Jachimo/obstagtools
 # Requires Python 3.5+, tested using Python 3.9
 
@@ -6,17 +5,8 @@ import logging
 import re
 from typing import Optional, List
 
+import obs_config as config
 
-# CONSTANTS
-#  TODO: Move to config file
-# Regular expression to use for detecting [[internal links]] within Obsidian docs
-LINK_REGEXP: re.Pattern = re.compile(r'\[\[(.{4,}?)(?:\||\]\])', re.MULTILINE)  # See https://regex101.com/r/kEmr3g/2
-# Both SKIP_DIRS and ATTACHMENT_DIRS are excluded from the search for Obsidian notes files
-SKIP_DIRS: List[str] = ['Templates', '.obsidian']
-# Default attachment dir(s), relative to vault root
-ATTACHMENT_DIRS: List[str] = ['Attachments']
-# Only files with one of the ALLOWED_FILE_EXTENSIONS are considered possible Obsidian notes
-ALLOWED_FILE_EXTENSIONS: List[str] = ['md', 'markdown', 'mdown', 'mkdn', 'obs']
 
 # LOGGING
 logger = logging.getLogger(__name__)
@@ -140,7 +130,7 @@ class ObsDocument(object):
         """Get a list of [[internal link]] targets extracted from the document.
 
         Internal links are only those enclosed in double brackets,
-        and targets are extracted using a regular expression (LINK_REGEXP) which
+        and targets are extracted using a regular expression (config.LINK_REGEXP) which
         very likely errs on the side of false-positives.
 
         If a link contains an optional component delimited with a pipe character,
@@ -149,7 +139,7 @@ class ObsDocument(object):
         Returns:
             List of strings from inside [[double bracketed]] links.
         """
-        return re.findall(LINK_REGEXP, ''.join(self.lines))
+        return re.findall(config.LINK_REGEXP, ''.join(self.lines))
 
     def detect_frontmatter(self) -> None:
         """Try to detect beginning of frontmatter, end of frontmatter, and tags line
