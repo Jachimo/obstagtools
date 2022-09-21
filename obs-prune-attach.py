@@ -15,7 +15,7 @@ import logging
 import argparse
 from typing import Optional, List
 
-import obs_document
+import obs_vault
 
 
 def main():
@@ -41,7 +41,7 @@ def main():
         rootlogger.setLevel(logging.INFO)
 
     # Obsidian Vault
-    v = obs_document.ObsVault(args.vaultroot)
+    v = obs_vault.ObsVault(args.vaultroot)
 
     # If --attachmentpath is used, override the default
     if args.attachmentpath:

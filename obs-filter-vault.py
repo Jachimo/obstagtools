@@ -15,13 +15,7 @@ import pathlib
 import shutil
 
 import obs_document
-
-# Both SKIP_DIRS and ATTACHMENT_DIRS are excluded from the search for Obsidian notes files
-SKIP_DIRS: List[str] = ['Templates', '.obsidian']
-ATTACHMENT_DIRS: List[str] = ['Attachments']
-
-# Only files with one of the ALLOWED_FILE_EXTENSIONS are considered possible Obsidian notes
-ALLOWED_FILE_EXTENSIONS: List[str] = ['md', 'markdown', 'mdown', 'mkdn', 'obs']
+import obs_vault
 
 
 def main() -> int:
@@ -53,8 +47,8 @@ def main() -> int:
         rootlogger.setLevel(logging.INFO)
 
     # Create Vault object
-    vault: obs_document.ObsVault
-    vault = obs_document.ObsVault(args.inpath)
+    vault: obs_vault.ObsVault
+    vault = obs_vault.ObsVault(args.inpath)
 
     # Input sanity checks
     if os.path.isdir(args.outpath):
