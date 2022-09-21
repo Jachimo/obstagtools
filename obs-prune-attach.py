@@ -39,6 +39,16 @@ def main():
     else:
         rootlogger.setLevel(logging.INFO)
 
+    # Fail fast on invalid inputs
+    if not isinstance(args.vaultroot, str):
+        raise TypeError(f'Vault directory {args.vaultroot} is not a string')
+    if args.trash:
+        if not isinstance(args.trash, str):
+            raise TypeError(f'Trash directory {args.trash} is not a string')
+    if args.attachmentpath:
+        if not isinstance(args.attachmentpath, str):
+            raise TypeError(f'Attachment directory {args.attachmentpath} is not a string')
+
     # Obsidian Vault
     v = obs_vault.ObsVault(args.vaultroot)
 
