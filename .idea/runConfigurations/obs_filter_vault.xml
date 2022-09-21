@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="obsidian-filter-vault" type="PythonConfigurationType" factoryName="Python">
+  <configuration default="false" name="obs-filter-vault" type="PythonConfigurationType" factoryName="Python">
     <module name="obstagtools" />
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />

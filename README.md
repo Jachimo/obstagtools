@@ -1,8 +1,21 @@
 # Obsidian Tag & Metadata Tools (`obstagtools`)
 
-Some tools for working with [Obsidian][]-flavor (YAML frontmatter + Markdown content) notes files.
+Some tools for working with [Obsidian.md][Obsidian]-flavor (YAML frontmatter + Markdown content) notes files.
+
+**This should be considered 'developer-grade' software, and almost certainly has bugs.**
+Problem reports and pull requests welcome.
+
+This project is packaged with [Poetry][Poetry].
+You may want to refer to the [Python Poetry Cheat Sheet][ppcs] for commands; taking advantage of Poetry
+requires that you have it installed (verify with `poetry --version`), after which you should be
+able to run `poetry install` and have it download all required dependencies.
+
+To run a particular tool, simply execute `poetry run SCRIPTNAME.py`, where `SCRIPTNAME.py` is the filename
+of the tool you wish to run (e.g. `obs-filter-vault.py`), followed by its required arguments and options.
 
 [Obsidian]: https://obsidian.md/
+[Poetry]: https://python-poetry.org/
+[ppcs]: https://gist.github.com/CarlosDomingues/b88df15749af23a463148bd2c2b9b3fb
 
 ## obs-add-tag.py
 
@@ -185,7 +198,7 @@ optional arguments:
   --debug               Enable debug mode (verbose output)
 ```
 
-## obs_keywords_yake.py
+## obs-wikify-yake.py
 **Very experimental** auto-keyword-linking tool, which uses YAKE to extract keywords from an Obsidian document's
 content, and then makes occurrences of each keyword into Obsidian-style [[double bracket]] links.
 The intended use is for creating knowledge graphs and finding unknown linkages between documents, but it is not
@@ -194,7 +207,7 @@ well-suited for that purpose yet.
 ### Usage
 
 ```Text
-usage: keywords_yake.py [-h] [--debug] inpath [outpath]
+usage: obs-wikify-yake.py [-h] [--debug] inpath [outpath]
 
 Use YAKE to make wikilinks from [[keywords]] in an Obsidian document
 
