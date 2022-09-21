@@ -6,7 +6,7 @@ import re
 from typing import Optional, List, Iterable, Type
 
 import obs_config as config
-
+from obs_utilities import check_inner_type
 
 # LOGGING
 logger = logging.getLogger(__name__)
