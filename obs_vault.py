@@ -34,7 +34,7 @@ class ObsVault(object):
         self._rootpath = strippedpath
 
     @property
-    def doclist(self) -> List[str]:
+    def doclist(self) -> Optional[List[str]]:
         docs: List[str] = []
         root: str
         dirs: List[str]
