@@ -3,7 +3,7 @@
 
 import logging
 import re
-from typing import Optional, List, Iterable, Type
+from typing import Optional, List
 
 import obs_config as config
 from obs_utilities import check_inner_type

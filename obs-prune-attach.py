@@ -75,12 +75,14 @@ def main():
 
     # By default, just list files to delete (as YAML list) on stdout
     if (not args.trash) and (not args.delete):
+        logger.debug(f'Writing YAML-formatted deletion list to stdout')
         sys.stdout.write('delete:\n')
         for fp in todelete:
             sys.stdout.write(f'  - {fp}\n')
 
     # The "--trash DIR" option specifies that DIR be used as 'trash' and files moved there
     if args.trash:
+        logger.debug(f'Creating trash dir at {args.trash} and moving deletable files into it')
         for fp in todelete:
             newfp = f'{args.trash.rstrip(os.sep)}{os.sep}{os.path.basename(fp)}'
             pathlib.Path(os.path.dirname(newfp)).mkdir(parents=True, exist_ok=True)  # create trash dir if needed
