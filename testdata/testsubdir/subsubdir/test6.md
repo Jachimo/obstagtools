@@ -3,15 +3,14 @@ created: "2022-09-10 00:55 EDT"
 tags:
   - testfile
   - example
-alias: "Fifth Sample Obsidian Document"
-name: "Test Document 5"
+alias: "Sixth Sample Obsidian Document"
+name: "Test Document 6"
 ---
-# Obsidian Test Document Number 5
-This is the _fifth_ Obsidian Markdown+YAML test document; this one
-has a 'testvalue' header that is set to 'True', so it should be
-copied over (or otherwise acted upon) but some test scripts and
-examples.
-I'm getting pretty bored of creating these, by now.
+# Obsidian Test Document Number 6
+This is the _sixth_ Obsidian Markdown+YAML test document; this one
+has **no testvalue field in its YAML header at all**, so whether it
+is manipulated by `obs-filter-vault.md` will depend on the parameters
+given.
 
 ## On the Continued Dangers of Gardens
 

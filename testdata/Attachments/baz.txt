@@ -1,4 +1,4 @@
-# Negative Test File
+# Negative Test Attachment File
 
 This file should _not_ be linked from any of the test
 documents in `testdata`; if it gets copied to the output

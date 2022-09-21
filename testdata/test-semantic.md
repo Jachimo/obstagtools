@@ -4,6 +4,7 @@ testvalue: True
 tags:
   - testfile
 alias: "Obsidian Keyword Test"
+source: Wikipedia
 name: "Semantic Test Document"
 ---
 # Obsidian Keyword Test Document
