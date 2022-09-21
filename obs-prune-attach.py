@@ -9,6 +9,8 @@
 # By default, lists files to delete, but doesn't actually delete them.
 # To ACTUALLY delete, run with the --delete or -d flag
 
+import pathlib
+import shutil
 import sys
 import os
 import logging
@@ -21,11 +23,9 @@ import obs_vault
 def main():
     parser = argparse.ArgumentParser(description='Delete unused attachments in an Obsidian vault')
     parser.add_argument('vaultroot', help='Path to source vault (root directory of vault)')
-    parser.add_argument('--attachmentpath', '-a', help='Path to attachments directory')
-    parser.add_argument('--delete', '-d', action='store_true',
-                        help='Actually delete files (DANGER!)')
-    parser.add_argument('--trash', '-t', action='store_true',
-                        help='Trash dir to move deletable files to')
+    parser.add_argument('--attachmentpath', '-a', type=str, help='Path to attachments directory')
+    parser.add_argument('--delete', '-d', action='store_true', help='Actually delete files (DANGER!)')
+    parser.add_argument('--trash', '-t', type=str, help='Trash dir to move deletable files to')
     parser.add_argument('--debug', action='store_true', help='Enable debug mode (verbose output)')
     args = parser.parse_args()
 
@@ -64,13 +64,19 @@ def main():
             todelete.append(a)
     logger.debug(f'Delete list contains {len(todelete)} file(s)')
 
-    # Most of the time, just list files to delete as YAML-ish stdout
-    sys.stdout.write('delete:\n')
-    for fp in todelete:
-        sys.stdout.write(f'  - {fp}\n')
+    # By default, just list files to delete (as YAML list) on stdout
+    if (not args.trash) and (not args.delete):
+        sys.stdout.write('delete:\n')
+        for fp in todelete:
+            sys.stdout.write(f'  - {fp}\n')
 
-    if args.trash:  # TODO: Implement 'Trash' feature; create trash dir and move files there
-        raise NotImplementedError
+    # The "--trash DIR" option specifies that DIR be used as 'trash' and files moved there
+    if args.trash:
+        for fp in todelete:
+            newfp = f'{args.trash.rstrip(os.sep)}{os.sep}{os.path.basename(fp)}'
+            pathlib.Path(os.path.dirname(newfp)).mkdir(parents=True, exist_ok=True)  # create trash dir if needed
+            logger.debug(f'Moving: {fp} -> {newfp}')
+            shutil.move(fp, newfp)
 
     if args.delete:  # TODO: Implement --delete feature, which actually deletes files
         raise NotImplementedError
