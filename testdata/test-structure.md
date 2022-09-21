@@ -9,9 +9,16 @@ alias: "Sample Obsidian Document"
 name: "Structure Test Document"
 ---
 # Sample Obsidian Structured Text Document
+
 This is a sample of a structured text document using an Obsidian-style
 (also Jekyll-style) YAML "frontmatter" section, followed by
 Markdown-styled content.
+
+It has a `testvalue:` header set to **False** in YAML.
+
+Also, it contains a variety of intra-vault links (wiki-style links) and
+several attachment links.  (Both `foo.txt` and `kitten.jpg` have valid
+links to them from later in this document.)
 
 ## Some Examples
 Here we're just exercising the Markdown functionality...
@@ -30,8 +37,11 @@ Here we're just exercising the Markdown functionality...
 
 Are you sure that `2 + 2 = 4`?
 
-Embedded image (with width set):  
-![[bar.png|250]]
+Embedded kitten image (with width set):  
+![[kitten.jpg|92]]
+
+The file `bar.png` is not actually a PNG file; it's invalid.
+Also, this use of the filename should _not_ count as a link to the file.
 
 **A Wise Quotation:**  
 
