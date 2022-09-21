@@ -188,7 +188,7 @@ optional arguments:
   --debug               Enable debug mode (verbose output)
 ```
 
-## obs_keywords_yake.py
+## obs-wikify-yake.py
 **Very experimental** auto-keyword-linking tool, which uses YAKE to extract keywords from an Obsidian document's
 content, and then makes occurrences of each keyword into Obsidian-style [[double bracket]] links.
 The intended use is for creating knowledge graphs and finding unknown linkages between documents, but it is not
@@ -197,7 +197,7 @@ well-suited for that purpose yet.
 ### Usage
 
 ```Text
-usage: keywords_yake.py [-h] [--debug] inpath [outpath]
+usage: obs-wikify-yake.py [-h] [--debug] inpath [outpath]
 
 Use YAKE to make wikilinks from [[keywords]] in an Obsidian document
 
