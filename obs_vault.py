@@ -88,7 +88,7 @@ class ObsVault(object):
             return None
         attach_list: list = []
         for d in self.attachmentdirs:
-            for root, subdirs, files in os.walk(f'{self.root.rstrip(os.sep)}{os.sep}{d}'):
+            for root, subdirs, files in os.walk(d):
                 for f in files:
                     attach_list.append(f'{root}{os.sep}{f}')
         logger.debug(f'Vault {os.path.basename(self.root)} contains {len(attach_list)} attachments')
