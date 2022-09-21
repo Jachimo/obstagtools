@@ -6,9 +6,9 @@ import logging
 import re
 from typing import Optional, List
 
-import obs_document
 
-# CONSTANTS  # TODO: Move to config file
+# CONSTANTS
+#  TODO: Move to config file
 # Regular expression to use for detecting [[internal links]] within Obsidian docs
 LINK_REGEXP: re.Pattern = re.compile(r'\[\[(.{4,}?)(?:\||\]\])', re.MULTILINE)  # See https://regex101.com/r/kEmr3g/2
 # Both SKIP_DIRS and ATTACHMENT_DIRS are excluded from the search for Obsidian notes files

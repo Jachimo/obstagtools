@@ -7,7 +7,6 @@
 # Removes attachments from an Obsidian Vault's Attachments directory
 # that are not linked by a document in the vault.
 # By default, lists files to delete, but doesn't actually delete them.
-# To ACTUALLY delete, run with the --delete or -d flag
 
 import pathlib
 import shutil
@@ -46,7 +45,7 @@ def main():
     # If --attachmentpath is used, override the default
     if args.attachmentpath:
         v.attachmentdirs = [args.attachmentpath]
-    logger.debug(f'Attachment directory/ies: {v.attachmentdirs}')
+    logger.debug(f'Attachment directory(ies): {v.attachmentdirs}')
 
     # Compile list of all attachments in the vault
     all_attach: List[str] = v.allattachments
