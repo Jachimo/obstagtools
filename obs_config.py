@@ -17,3 +17,6 @@ ATTACHMENT_DIRS: List[str] = ['Attachments']
 
 # Only files with one of the ALLOWED_FILE_EXTENSIONS are considered possible Obsidian notes
 ALLOWED_FILE_EXTENSIONS: List[str] = ['md', 'markdown', 'mdown', 'mkdn', 'obs']
+
+# Test data directory (used by pytest unit tests)
+TEST_DATA_DIR = 'testdata/'
