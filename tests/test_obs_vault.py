@@ -1,12 +1,12 @@
 # Basic unit tests for obs_vault.py
 import os
-
 import pytest
 
 from obs_utilities import check_inner_type
+import obs_config as config
+import obs_document
 
 from obs_vault import ObsVault
-import obs_config as config
 
 
 # Negative tests (fail conditions)
@@ -35,7 +35,7 @@ def basic_vault():
 def test_vaultroot_trim(basic_vault):
     assert basic_vault.root == TESTVAULT.rstrip(os.sep)
 
-def test_attachment_dir_length(basic_vault):
+def test_attachmentdirs_count(basic_vault):
     assert len(basic_vault.attachmentdirs) == len(config.ATTACHMENT_DIRS)
 
 def test_allattachments_null(basic_vault):
@@ -46,9 +46,19 @@ def test_allattachments_types(basic_vault):
     assert isinstance(basic_vault.allattachments, list)
     assert check_inner_type(basic_vault.allattachments, str)
 
+def test_allattachment_count(basic_vault):
+    assert len(basic_vault.allattachments) == 4  # This will change if TESTVAULT contents does!
+
 def test_doclist_types(basic_vault):
     assert isinstance(basic_vault.doclist, list)
     assert check_inner_type(basic_vault.doclist, str)
 
-def test_doc_count(basic_vault):
+def test_docs_types(basic_vault):
+    assert isinstance(basic_vault.docs, list)
+    assert check_inner_type(basic_vault.docs, obs_document.ObsDocument)
+
+def test_docs_count(basic_vault):
+    assert len(basic_vault.docs) == 6  # This will change if TESTVAULT contents does!
+
+def test_doc_doclist_count_consistency(basic_vault):
     assert len(basic_vault.doclist) == len(basic_vault.docs)
