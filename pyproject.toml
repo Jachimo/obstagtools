@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "obstagtools"
-version = "0.2.0"
+version = "1.0.0"
 description = "https://github.com/Jachimo/obstagtools"
 authors = ["Jachimo <jachimo@noreply.github.com>"]
 readme = "README.md"
